@@ -80,8 +80,14 @@ var config = {
     // Disables the reactions feature.
     // disableReactions: true,
 
+    // Disables the reactions moderation feature.
+    // disableReactionsModeration: false,
+
     // Disables polls feature.
     // disablePolls: false,
+
+    // Disables self-view tile. (hides it from tile view and from filmstrip)
+    // disableSelfView: false,
 
     // Disables ICE/UDP by filtering out local and remote UDP candidates in
     // signalling.
@@ -375,6 +381,13 @@ var config = {
     //    resizeDesktopForPresenter: false
     // },
 
+    // Notification timeouts
+    // notificationTimeouts: {
+    //     short: 2500,
+    //     medium: 5000,
+    //     long: 10000
+    // },
+
     // // Options for the recording limit notification.
     // recordingLimit: {
     //
@@ -392,6 +405,9 @@ var config = {
 
     // Disables or enables RTX (RFC 4588) (defaults to false).
     // disableRtx: false,
+
+    // Moves all Jitsi Meet 'beforeunload' logic (cleanup, leaving, disconnecting, etc) to the 'unload' event.
+    // disableBeforeUnloadHandlers: true,
 
     // Disables or enables TCC support in this client (default: enabled).
     // enableTcc: true,
@@ -459,11 +475,20 @@ var config = {
     // when the toolbar is shown on mouse movements
     // disable1On1Mode: null | false | true,
 
+    // Default local name to be displayed
+    // defaultLocalDisplayName: 'me',
+
+    // Default remote name to be displayed
+    // defaultRemoteDisplayName: 'Fellow Jitster',
+
     // Default language for the user interface.
     // defaultLanguage: 'en',
 
     // Disables profile and the edit of all fields from the profile settings (display name and email)
     // disableProfile: false,
+
+    // Hides the email section under profile settings.
+    // hideEmailInSettings: false,
 
     // Whether or not some features are checked based on token.
     // enableFeaturesBasedOnToken: false,
@@ -480,8 +505,14 @@ var config = {
     // and microsoftApiApplicationClientID
     // enableCalendarIntegration: false,
 
-    // When 'true', it shows an intermediate page before joining, where the user can configure their devices.
-    // prejoinPageEnabled: false,
+    // Configs for prejoin page.
+    // prejoinConfig: {
+    //     // When 'true', it shows an intermediate page before joining, where the user can configure their devices.
+    //     // This replaces `prejoinPageEnabled`.
+    //     enabled: true,
+    //     // List of buttons to hide from the extra join options dropdown.
+    //     hideExtraJoinButtons: ['no-audio', 'by-phone']
+    // },
 
     // When 'true', the user cannot edit the display name.
     // (Mainly useful when used in conjuction with the JWT so the JWT name becomes read only.)
@@ -740,7 +771,7 @@ var config = {
         // module connects to the provided rtcstatsEndpoint and sends statistics regarding
         // PeerConnection states along with getStats metrics polled at the specified
         // interval.
-        // rtcstatsEnabled: true,
+        // rtcstatsEnabled: false,
 
         // In order to enable rtcstats one needs to provide a endpoint url.
         // rtcstatsEndpoint: wss://rtcstats-server-pilot.jitsi.net/,
@@ -979,6 +1010,9 @@ var config = {
     // If true, tile view will not be enabled automatically when the participants count threshold is reached.
     // disableTileView: true,
 
+    // If true, the tiles will be displayed contained within the available space rather than enlarged to cover it.
+    // disableTileEnlargement: true,
+
     // Controls the visibility and behavior of the top header conference info labels.
     // If a label's id is not in any of the 2 arrays, it will not be visible at all on the header.
     // conferenceInfo: {
@@ -1119,6 +1153,9 @@ var config = {
     //     'notify.connectedOneMember', // show when a participant joined
     //     'notify.connectedTwoMembers', // show when two participants joined simultaneously
     //     'notify.connectedThreePlusMembers', // show when more than 2 participants joined simultaneously
+    //     'notify.leftOneMember', // show when a participant left
+    //     'notify.leftTwoMembers', // show when two participants left simultaneously
+    //     'notify.leftThreePlusMembers', // show when more than 2 participants left simultaneously
     //     'notify.grantedTo', // shown when moderator rights were granted to a participant
     //     'notify.invitedOneMember', // shown when 1 participant has been invited
     //     'notify.invitedThreePlusMembers', // shown when 3+ participants have been invited

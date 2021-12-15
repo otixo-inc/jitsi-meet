@@ -37,26 +37,6 @@ export function isDisplayNameRequired(state: Object): boolean {
 }
 
 /**
- * Selector for determining if the display name from prejoin page is read only.
- *
- * @param {Object} state - The state of the app.
- * @returns {boolean}
- */
-export function isPrejoinNameReadOnly(state: Object): boolean {
-    return Boolean(state['features/base/jwt']?.user?.name);
-}
-
-/**
- * Selector for determining if the user has chosen to skip prejoin page.
- *
- * @param {Object} state - The state of the app.
- * @returns {boolean}
- */
-export function isPrejoinSkipped(state: Object) {
-    return state['features/prejoin'].userSelectedSkipPrejoin;
-}
-
-/**
  * Returns the text for the prejoin status bar.
  *
  * @param {Object} state - The state of the app.
@@ -158,7 +138,7 @@ export function isJoinByPhoneDialogVisible(state: Object): boolean {
  */
 export function isPrejoinPageEnabled(state: Object): boolean {
     return navigator.product !== 'ReactNative'
-        && state['features/base/config'].prejoinPageEnabled
+        && state['features/base/config'].prejoinConfig?.enabled
         && !state['features/base/settings'].userSelectedSkipPrejoin
         && !(state['features/base/config'].enableForcedReload && state['features/prejoin'].skipPrejoinOnReload);
 }
@@ -170,6 +150,12 @@ export function isPrejoinPageEnabled(state: Object): boolean {
  * @returns {boolean}
  */
 export function isPrejoinPageVisible(state: Object): boolean {
+    // If the user has changed the setting for prejoin visibility on start
+    // let the visibility be controlled only by the 'showPrejoin' flag.
+    if (state['features/prejoin'].skipPrejoinChanging) {
+        return state['features/prejoin']?.showPrejoin;
+    }
+
     return isPrejoinPageEnabled(state) && state['features/prejoin']?.showPrejoin;
 }
 

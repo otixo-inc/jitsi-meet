@@ -10,7 +10,13 @@ import { endpointMessageReceived } from '../../subtitles';
 import { getReplaceParticipant } from '../config/functions';
 import { JITSI_CONNECTION_CONFERENCE_KEY } from '../connection';
 import { JitsiConferenceEvents } from '../lib-jitsi-meet';
-import { MEDIA_TYPE, setAudioMuted, setVideoMuted } from '../media';
+import {
+    MEDIA_TYPE,
+    setAudioMuted,
+    setAudioUnmutePermissions,
+    setVideoMuted,
+    setVideoUnmutePermissions
+} from '../media';
 import {
     dominantSpeakerChanged,
     getNormalizedDisplayName,
@@ -21,7 +27,13 @@ import {
     participantRoleChanged,
     participantUpdated
 } from '../participants';
-import { getLocalTracks, replaceLocalTrack, trackAdded, trackRemoved } from '../tracks';
+import {
+    destroyLocalTracks,
+    getLocalTracks,
+    replaceLocalTrack,
+    trackAdded,
+    trackRemoved
+} from '../tracks';
 import { getBackendSafeRoomName } from '../util';
 
 import {
@@ -45,7 +57,8 @@ import {
     SET_PASSWORD_FAILED,
     SET_ROOM,
     SET_PENDING_SUBJECT_CHANGE,
-    SET_START_MUTED_POLICY
+    SET_START_MUTED_POLICY,
+    SET_START_REACTIONS_MUTED
 } from './actionTypes';
 import {
     AVATAR_URL_COMMAND,
@@ -146,6 +159,17 @@ function _addConferenceListeners(conference, dispatch, state) {
             }
         });
 
+    conference.on(
+        JitsiConferenceEvents.AUDIO_UNMUTE_PERMISSIONS_CHANGED,
+        disableAudioMuteChange => {
+            dispatch(setAudioUnmutePermissions(disableAudioMuteChange));
+        });
+    conference.on(
+        JitsiConferenceEvents.VIDEO_UNMUTE_PERMISSIONS_CHANGED,
+        disableVideoMuteChange => {
+            dispatch(setVideoUnmutePermissions(disableVideoMuteChange));
+        });
+
     // Dispatches into features/base/tracks follow:
 
     conference.on(
@@ -162,6 +186,8 @@ function _addConferenceListeners(conference, dispatch, state) {
                 dispatch(participantMutedUs(participantThatMutedUs, track));
             }
         });
+
+    conference.on(JitsiConferenceEvents.TRACK_UNMUTE_REJECTED, track => dispatch(destroyLocalTracks(track)));
 
     // Dispatches into features/base/participants follow:
     conference.on(
@@ -483,7 +509,7 @@ export function checkIfCanJoin() {
         const { authRequired, password }
             = getState()['features/base/conference'];
 
-        const replaceParticipant = getReplaceParticipant(APP.store.getState());
+        const replaceParticipant = getReplaceParticipant(getState());
 
         authRequired && dispatch(_conferenceWillJoin(authRequired));
         authRequired && authRequired.join(password, replaceParticipant);
@@ -637,6 +663,24 @@ export function setFollowMe(enabled: boolean) {
     return {
         type: SET_FOLLOW_ME,
         enabled
+    };
+}
+
+/**
+ * Enables or disables the Mute reaction sounds feature.
+ *
+ * @param {boolean} muted - Whether or not reaction sounds should be muted for all participants.
+ * @param {boolean} updateBackend - Whether or not the moderator should notify all participants for the new setting.
+ * @returns {{
+ *     type: SET_START_REACTIONS_MUTED,
+ *     muted: boolean
+ * }}
+ */
+export function setStartReactionsMuted(muted: boolean, updateBackend: boolean = false) {
+    return {
+        type: SET_START_REACTIONS_MUTED,
+        muted,
+        updateBackend
     };
 }
 

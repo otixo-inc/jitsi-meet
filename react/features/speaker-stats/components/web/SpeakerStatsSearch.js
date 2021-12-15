@@ -6,8 +6,8 @@ import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 
-import { getFieldValue } from '../../base/react';
-import { isSpeakerStatsSearchDisabled } from '../functions';
+import { getFieldValue } from '../../../base/react';
+import { isSpeakerStatsSearchDisabled } from '../../functions';
 
 const useStyles = makeStyles(theme => {
     return {
@@ -54,6 +54,11 @@ function SpeakerStatsSearch({ onSearch }: Props) {
         onSearch && onSearch(value);
     }, []);
     const disableSpeakerStatsSearch = useSelector(isSpeakerStatsSearchDisabled);
+    const preventDismiss = useCallback((evt: KeyboardEvent) => {
+        if (evt.key === 'Enter') {
+            evt.preventDefault();
+        }
+    }, []);
 
     if (disableSpeakerStatsSearch) {
         return null;
@@ -67,6 +72,7 @@ function SpeakerStatsSearch({ onSearch }: Props) {
                 compact = { true }
                 name = 'speakerStatsSearch'
                 onChange = { onChange }
+                onKeyPress = { preventDismiss }
                 placeholder = { t('speakerStats.search') }
                 shouldFitContainer = { false }
                 type = 'text'
