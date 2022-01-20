@@ -11,7 +11,6 @@ import {
     SET_PREJOIN_DEVICE_ERRORS,
     SET_PREJOIN_DISPLAY_NAME_REQUIRED,
     SET_PREJOIN_PAGE_VISIBILITY,
-    SET_SKIP_PREJOIN_CHANGING,
     SET_SKIP_PREJOIN_RELOAD
 } from './actionTypes';
 
@@ -59,13 +58,6 @@ ReducerRegistry.register(
                 ...state,
                 joiningInProgress: action.value
             };
-        case SET_SKIP_PREJOIN_CHANGING: {
-            return {
-                ...state,
-                skipPrejoinChanging: action.value
-            };
-        }
-
         case SET_SKIP_PREJOIN_RELOAD: {
             return {
                 ...state,

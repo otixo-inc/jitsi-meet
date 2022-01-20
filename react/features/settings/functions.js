@@ -9,6 +9,7 @@ import {
     isLocalParticipantModerator
 } from '../base/participants';
 import { toState } from '../base/redux';
+import { getHideSelfView } from '../base/settings';
 import { parseStandardURIString } from '../base/util';
 import { isFollowMeActive } from '../follow-me';
 import { isReactionsEnabled } from '../reactions/functions.any';
@@ -79,6 +80,28 @@ export function normalizeUserInputURL(url: string) {
 }
 
 /**
+ * Returns the notification types and their user selected configuration.
+ *
+ * @param {(Function|Object)} stateful -The (whole) redux state, or redux's
+ * {@code getState} function to be used to retrieve the state.
+ * @returns {Object} - The section of notifications to be configured.
+ */
+export function getNotificationsMap(stateful: Object | Function) {
+    const state = toState(stateful);
+    const { notifications } = state['features/base/config'];
+    const { userSelectedNotifications } = state['features/base/settings'];
+
+    return Object.keys(userSelectedNotifications)
+        .filter(key => !notifications || notifications.includes(key))
+        .reduce((notificationsMap, key) => {
+            return {
+                ...notificationsMap,
+                [key]: userSelectedNotifications[key]
+            };
+        }, {});
+}
+
+/**
  * Returns the properties for the "More" tab from settings dialog from Redux
  * state.
  *
@@ -86,18 +109,26 @@ export function normalizeUserInputURL(url: string) {
  * {@code getState} function to be used to retrieve the state.
  * @returns {Object} - The properties for the "More" tab from settings dialog.
  */
-export function getMoreTabProps(stateful: Object | Function) {
+export function getModeratorTabProps(stateful: Object | Function) {
     const state = toState(stateful);
     const framerate = state['features/screen-share'].captureFrameRate ?? SS_DEFAULT_FRAME_RATE;
     const language = i18next.language || DEFAULT_LANGUAGE;
     const configuredTabs = interfaceConfig.SETTINGS_SECTIONS || [];
+    const enabledNotifications = getNotificationsMap(stateful);
+
+    // when self view is controlled by the config we hide the settings
+    const { disableSelfView, disableSelfViewSettings } = state['features/base/config'];
 
     return {
         currentFramerate: framerate,
         currentLanguage: language,
         desktopShareFramerates: SS_SUPPORTED_FRAMERATES,
+        disableHideSelfView: disableSelfViewSettings || disableSelfView,
+        hideSelfView: getHideSelfView(state),
         languages: LANGUAGES,
         showLanguageSettings: configuredTabs.includes('language'),
+        enabledNotifications,
+        showNotificationsSettings: Object.keys(enabledNotifications).length > 0,
         showPrejoinPage: !state['features/base/settings'].userSelectedSkipPrejoin,
         showPrejoinSettings: state['features/base/config'].prejoinConfig?.enabled
     };

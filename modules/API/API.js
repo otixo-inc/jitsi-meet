@@ -21,6 +21,7 @@ import {
     getCurrentConference,
     sendTones,
     setFollowMe,
+    setLocalSubject,
     setPassword,
     setSubject
 } from '../../react/features/base/conference';
@@ -70,6 +71,7 @@ import { isScreenAudioSupported, isScreenVideoShared } from '../../react/feature
 import { startScreenShareFlow, startAudioScreenShareFlow } from '../../react/features/screen-share/actions';
 import { toggleScreenshotCaptureSummary } from '../../react/features/screenshot-capture';
 import { playSharedVideo, stopSharedVideo } from '../../react/features/shared-video/actions.any';
+import { extractYoutubeIdOrURL } from '../../react/features/shared-video/functions';
 import { toggleTileView, setTileView } from '../../react/features/video-layout';
 import { muteAllParticipants } from '../../react/features/video-menu/actions';
 import { setVideoQuality } from '../../react/features/video-quality';
@@ -135,6 +137,10 @@ function initCommands() {
         'display-name': displayName => {
             sendAnalytics(createApiEvent('display.name.changed'));
             APP.conference.changeLocalDisplayName(displayName);
+        },
+        'local-subject': localSubject => {
+            sendAnalytics(createApiEvent('local.subject.changed'));
+            APP.store.dispatch(setLocalSubject(localSubject));
         },
         'mute-everyone': mediaType => {
             const muteMediaType = mediaType ? mediaType : MEDIA_TYPE.AUDIO;
@@ -377,7 +383,11 @@ function initCommands() {
         'start-share-video': url => {
             logger.debug('Share video command received');
             sendAnalytics(createApiEvent('share.video.start'));
-            APP.store.dispatch(playSharedVideo(url));
+            const id = extractYoutubeIdOrURL(url);
+
+            if (id) {
+                APP.store.dispatch(playSharedVideo(id));
+            }
         },
 
         'stop-share-video': () => {
@@ -1516,12 +1526,14 @@ class API {
      * Notify external application ( if API is enabled) that a toolbar button was clicked.
      *
      * @param {string} key - The key of the toolbar button.
+     * @param {boolean} preventExecution - Whether execution of the button click was prevented or not.
      * @returns {void}
      */
-    notifyToolbarButtonClicked(key: string) {
+    notifyToolbarButtonClicked(key: string, preventExecution: boolean) {
         this._sendEvent({
             name: 'toolbar-button-clicked',
-            key
+            key,
+            preventExecution
         });
     }
 

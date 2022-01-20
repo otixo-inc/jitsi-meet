@@ -289,6 +289,12 @@ StateListenerRegistry.register(
                     })),
                 'raisedHand': (participant, value) =>
                     _raiseHandUpdated(store, conference, participant.getId(), value),
+                'region': (participant, value) =>
+                    store.dispatch(participantUpdated({
+                        conference,
+                        id: participant.getId(),
+                        region: value
+                    })),
                 'remoteControlSessionStatus': (participant, value) =>
                     store.dispatch(participantUpdated({
                         conference,
@@ -488,8 +494,8 @@ function _participantJoinedOrUpdated(store, next, action) {
             const updatedParticipant = getParticipantById(getState(), participantId);
 
             getFirstLoadableAvatarUrl(updatedParticipant, store)
-                .then(url => {
-                    dispatch(setLoadableAvatarUrl(participantId, url));
+                .then(urlData => {
+                    dispatch(setLoadableAvatarUrl(participantId, urlData?.src, urlData?.isUsingCORS));
                 });
         }
     }
