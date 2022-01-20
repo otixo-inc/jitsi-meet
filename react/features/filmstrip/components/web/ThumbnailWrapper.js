@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { shouldComponentUpdate } from 'react-window';
 
 import { connect } from '../../../base/redux';
+import { shouldHideSelfView } from '../../../base/settings/functions.any';
 import { getCurrentLayout, LAYOUTS } from '../../../video-layout';
 import { getDisableSelfView } from '../../functions.any';
 
@@ -22,6 +23,11 @@ type Props = {
      * The horizontal offset in px for the thumbnail. Used to center the thumbnails in the last row in tile view.
      */
     _horizontalOffset: number,
+
+    /**
+     * Whether or not there is a pinned participant.
+     */
+    _isAnyParticipantPinned: boolean,
 
     /**
      * The ID of the participant associated with the Thumbnail.
@@ -75,7 +81,7 @@ class ThumbnailWrapper extends Component<Props> {
      * @returns {ReactElement}
      */
     render() {
-        const { _participantID, style, _horizontalOffset = 0, _disableSelfView } = this.props;
+        const { _participantID, style, _horizontalOffset = 0, _isAnyParticipantPinned, _disableSelfView } = this.props;
 
         if (typeof _participantID !== 'string') {
             return null;
@@ -91,6 +97,7 @@ class ThumbnailWrapper extends Component<Props> {
 
         return (
             <Thumbnail
+                _isAnyParticipantPinned = { _isAnyParticipantPinned }
                 horizontalOffset = { _horizontalOffset }
                 key = { `remote_${_participantID}` }
                 participantID = { _participantID }
@@ -109,9 +116,10 @@ class ThumbnailWrapper extends Component<Props> {
 function _mapStateToProps(state, ownProps) {
     const _currentLayout = getCurrentLayout(state);
     const { remoteParticipants } = state['features/filmstrip'];
+    const { remote, local } = state['features/base/participants'];
     const remoteParticipantsLength = remoteParticipants.length;
     const { testing = {} } = state['features/base/config'];
-    const disableSelfView = getDisableSelfView(state);
+    const disableSelfView = shouldHideSelfView(state);
     const enableThumbnailReordering = testing.enableThumbnailReordering ?? true;
 
     if (_currentLayout === LAYOUTS.TILE_VIEW) {
@@ -160,8 +168,11 @@ function _mapStateToProps(state, ownProps) {
         return {};
     }
 
+    const _isAnyParticipantPinned = Boolean([ ...remote ].find(([ , value ]) => value?.pinned) || local?.pinned);
+
     return {
-        _participantID: remoteParticipants[index]
+        _participantID: remoteParticipants[index],
+        _isAnyParticipantPinned
     };
 }
 

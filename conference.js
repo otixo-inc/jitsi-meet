@@ -135,7 +135,6 @@ import { mediaPermissionPromptVisibilityChanged, toggleSlowGUMOverlay } from './
 import { suspendDetected } from './react/features/power-monitor';
 import {
     initPrejoin,
-    isPrejoinPageEnabled,
     isPrejoinPageVisible,
     makePrecallTest,
     setJoiningInProgress,
@@ -797,7 +796,21 @@ export default {
             logger.warn('initial device list initialization failed', error);
         }
 
-        if (isPrejoinPageEnabled(APP.store.getState())) {
+        const handleStartAudioMuted = (options, tracks) => {
+            if (options.startWithAudioMuted) {
+                // Always add the track on Safari because of a known issue where audio playout doesn't happen
+                // if the user joins audio and video muted, i.e., if there is no local media capture.
+                if (browser.isWebKitBased()) {
+                    this.muteAudio(true, true);
+                } else {
+                    return tracks.filter(track => track.getType() !== MEDIA_TYPE.AUDIO);
+                }
+            }
+
+            return tracks;
+        };
+
+        if (isPrejoinPageVisible(APP.store.getState())) {
             _connectionPromise = connect(roomName).then(c => {
                 // we want to initialize it early, in case of errors to be able
                 // to gather logs
@@ -828,25 +841,28 @@ export default {
 
             this._displayErrorsForCreateInitialLocalTracks(errors);
 
-            return this._setLocalAudioVideoStreams(tracks);
+            let localTracks = handleStartAudioMuted(initialOptions, tracks);
+
+            // in case where gum is slow and resolves after the startAudio/VideoMuted coming from jicofo, we can be
+            // join unmuted even though jicofo had instruct us to mute, so let's respect that before passing the tracks
+            if (!browser.isWebKitBased()) {
+                if (room?.isStartAudioMuted()) {
+                    localTracks = localTracks.filter(track => track.getType() !== MEDIA_TYPE.AUDIO);
+                }
+            }
+
+            if (room?.isStartVideoMuted()) {
+                localTracks = localTracks.filter(track => track.getType() !== MEDIA_TYPE.VIDEO);
+            }
+
+            return this._setLocalAudioVideoStreams(localTracks);
         }
 
         const [ tracks, con ] = await this.createInitialLocalTracksAndConnect(roomName, initialOptions);
-        let localTracks = tracks;
 
         this._initDeviceList(true);
 
-        if (initialOptions.startWithAudioMuted) {
-            // Always add the track on Safari because of a known issue where audio playout doesn't happen
-            // if the user joins audio and video muted, i.e., if there is no local media capture.
-            if (browser.isWebKitBased()) {
-                this.muteAudio(true, true);
-            } else {
-                localTracks = localTracks.filter(track => track.getType() !== MEDIA_TYPE.AUDIO);
-            }
-        }
-
-        return this.startConference(con, localTracks);
+        return this.startConference(con, handleStartAudioMuted(initialOptions, tracks));
     },
 
     /**

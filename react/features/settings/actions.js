@@ -10,8 +10,6 @@ import {
 import { openDialog } from '../base/dialog';
 import { i18next } from '../base/i18n';
 import { updateSettings } from '../base/settings';
-import { NOTIFICATION_TIMEOUT_TYPE, showNotification } from '../notifications';
-import { setPrejoinPageVisibility, setSkipPrejoinIsChanging } from '../prejoin/actions';
 import { setScreenshareFramerate } from '../screen-share/actions';
 
 import {
@@ -25,8 +23,6 @@ import {
     getProfileTabProps,
     getSoundsTabProps
 } from './functions';
-
-import { SETTINGS_TABS } from '.';
 
 declare var APP: Object;
 
@@ -91,17 +87,20 @@ export function submitMoreTab(newState: Object): Function {
         const showPrejoinPage = newState.showPrejoinPage;
 
         if (showPrejoinPage !== currentState.showPrejoinPage) {
-            // The 'showPrejoin' flag starts as 'true' on every new session.
-            // This prevents displaying the prejoin page when the user re-enables it.
-            if (showPrejoinPage && getState()['features/prejoin']?.showPrejoin) {
-                dispatch(setPrejoinPageVisibility(false));
-            }
-            batch(() => {
-                dispatch(setSkipPrejoinIsChanging(true));
-                dispatch(updateSettings({
-                    userSelectedSkipPrejoin: !showPrejoinPage
-                }));
-            });
+            dispatch(updateSettings({
+                userSelectedSkipPrejoin: !showPrejoinPage
+            }));
+        }
+
+        const enabledNotifications = newState.enabledNotifications;
+
+        if (enabledNotifications !== currentState.enabledNotifications) {
+            dispatch(updateSettings({
+                userSelectedNotifications: {
+                    ...getState()['features/base/settings'].userSelectedNotifications,
+                    ...enabledNotifications
+                }
+            }));
         }
 
         if (newState.currentLanguage !== currentState.currentLanguage) {
@@ -112,6 +111,40 @@ export function submitMoreTab(newState: Object): Function {
             const frameRate = parseInt(newState.currentFramerate, 10);
 
             dispatch(setScreenshareFramerate(frameRate));
+        }
+
+        if (newState.hideSelfView !== currentState.hideSelfView) {
+            dispatch(updateSettings({ disableSelfView: newState.hideSelfView }));
+        }
+    };
+}
+
+/**
+ * Submits the settings from the "Moderator" tab of the settings dialog.
+ *
+ * @param {Object} newState - The new settings.
+ * @returns {Function}
+ */
+export function submitModeratorTab(newState: Object): Function {
+    return (dispatch, getState) => {
+        const currentState = getModeratorTabProps(getState());
+
+        if (newState.followMeEnabled !== currentState.followMeEnabled) {
+            dispatch(setFollowMe(newState.followMeEnabled));
+        }
+
+        if (newState.startReactionsMuted !== currentState.startReactionsMuted) {
+            batch(() => {
+                // updating settings we want to update and backend (notify the rest of the participants)
+                dispatch(setStartReactionsMuted(newState.startReactionsMuted, true));
+                dispatch(updateSettings({ soundsReactions: !newState.startReactionsMuted }));
+            });
+        }
+
+        if (newState.startAudioMuted !== currentState.startAudioMuted
+            || newState.startVideoMuted !== currentState.startVideoMuted) {
+            dispatch(setStartMutedPolicy(
+                newState.startAudioMuted, newState.startVideoMuted));
         }
     };
 }

@@ -8,6 +8,7 @@ import {
     pinParticipant,
     getParticipantCountWithFake
 } from '../base/participants';
+import { shouldHideSelfView } from '../base/settings/functions.any';
 import {
     ASPECT_RATIO_BREAKPOINT,
     DEFAULT_MAX_COLUMNS,
@@ -105,7 +106,7 @@ export function getTileViewGridDimensions(state: Object) {
     // When in tile view mode, we must discount ourselves (the local participant) because our
     // tile is not visible.
     const { iAmRecorder } = state['features/base/config'];
-    const disableSelfView = getDisableSelfView(state);
+    const disableSelfView = shouldHideSelfView(state);
     const numberOfParticipants = getParticipantCountWithFake(state)
         - (iAmRecorder ? 1 : 0)
         - (disableSelfView ? 1 : 0);

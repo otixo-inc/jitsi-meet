@@ -339,6 +339,17 @@ class AbstractStartRecordingDialog extends Component<Props, State> {
         return true;
     }
 
+    _toggleScreenshotCapture:() => void;
+
+    /**
+     * Toggles screenshot capture feature.
+     *
+     * @returns {void}
+     */
+    _toggleScreenshotCapture() {
+        // To be implemented by subclass.
+    }
+
     /**
      * To be overwritten by web component.
      */
