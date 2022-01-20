@@ -690,6 +690,13 @@
             "participantsList": "Anwesende ({{count}})",
             "waitingLobby": "In der Lobby ({{count}})"
         },
+        "close": "Schließen",
+        "header": "Anwesende",
+        "headings": {
+            "lobby": "Lobby ({{count}})",
+            "participantsList": "Anwesende ({{count}})",
+            "waitingLobby": "In der Lobby ({{count}})"
+        },
         "search": "Suche Anwesende"
     },
     "passwordDigitsOnly": "Bis zu {{number}} Ziffern",

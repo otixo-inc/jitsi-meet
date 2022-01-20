@@ -351,11 +351,6 @@ class AbstractStartRecordingDialog extends Component<Props, State> {
     }
 
     /**
-     * To be overwritten by web component.
-     */
-    _toggleScreenshotCapture:() => void;
-
-    /**
      * Renders the platform specific dialog content.
      *
      * @protected

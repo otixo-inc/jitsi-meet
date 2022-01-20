@@ -150,36 +150,6 @@ export function submitModeratorTab(newState: Object): Function {
 }
 
 /**
- * Submits the settings from the "Moderator" tab of the settings dialog.
- *
- * @param {Object} newState - The new settings.
- * @returns {Function}
- */
-export function submitModeratorTab(newState: Object): Function {
-    return (dispatch, getState) => {
-        const currentState = getModeratorTabProps(getState());
-
-        if (newState.followMeEnabled !== currentState.followMeEnabled) {
-            dispatch(setFollowMe(newState.followMeEnabled));
-        }
-
-        if (newState.startReactionsMuted !== currentState.startReactionsMuted) {
-            batch(() => {
-                // updating settings we want to update and backend (notify the rest of the participants)
-                dispatch(setStartReactionsMuted(newState.startReactionsMuted, true));
-                dispatch(updateSettings({ soundsReactions: !newState.startReactionsMuted }));
-            });
-        }
-
-        if (newState.startAudioMuted !== currentState.startAudioMuted
-            || newState.startVideoMuted !== currentState.startVideoMuted) {
-            dispatch(setStartMutedPolicy(
-                newState.startAudioMuted, newState.startVideoMuted));
-        }
-    };
-}
-
-/**
  * Submits the settings from the "Profile" tab of the settings dialog.
  *
  * @param {Object} newState - The new settings.

@@ -17,17 +17,6 @@ const titleBarSafeView = {
     top: 0
 };
 
-
-/**
- * The styles of the safe area view that contains the navigation bar.
- */
-const navBarSafeView = {
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0
-};
-
 /**
  * The styles of the feature conference.
  */

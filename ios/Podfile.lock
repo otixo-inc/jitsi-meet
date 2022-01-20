@@ -405,8 +405,6 @@ PODS:
     - React-Core
   - RNCClipboard (1.5.1):
     - React-Core
-  - RNCClipboard (1.5.1):
-    - React-Core
   - RNCMaskedView (0.2.6):
     - React-Core
   - RNDefaultPreference (1.4.3):

@@ -98,13 +98,7 @@ class ShareDesktopButton extends AbstractButton<Props, *> {
  * @returns {Object}
  */
 const mapStateToProps = state => {
-    const { muted, unmuteBlocked } = state['features/base/media'].video;
-    const videoOrShareInProgress = isScreenMediaShared(state) || !muted;
-
-    // Disable the screenshare button if the video sender limit is reached and there is no video or media share in
-    // progress.
-    let desktopSharingEnabled = JitsiMeetJS.isDesktopSharingEnabled()
-        && !(unmuteBlocked && !videoOrShareInProgress);
+    let desktopSharingEnabled = JitsiMeetJS.isDesktopSharingEnabled();
     const { enableFeaturesBasedOnToken } = state['features/base/config'];
     let desktopSharingDisabledTooltipKey;
 
