@@ -1,5 +1,7 @@
 /* @flow */
 
+import { withStyles } from '@material-ui/styles';
+import clsx from 'clsx';
 import React, { PureComponent } from 'react';
 import { FixedSizeList, FixedSizeGrid } from 'react-window';
 import type { Dispatch } from 'redux';
@@ -14,6 +16,7 @@ import { isMobileBrowser } from '../../../base/environment/utils';
 import { translate } from '../../../base/i18n';
 import { Icon, IconMenuDown, IconMenuUp } from '../../../base/icons';
 import { connect } from '../../../base/redux';
+import { shouldHideSelfView } from '../../../base/settings/functions.any';
 import { showToolbox } from '../../../toolbox/actions.web';
 import { isButtonEnabled, isToolboxVisible } from '../../../toolbox/functions.web';
 import { LAYOUTS, getCurrentLayout } from '../../../video-layout';
@@ -55,6 +58,11 @@ type Props = {
     _columns: number,
 
     /**
+     * Whether or not to hide the self view.
+     */
+    _disableSelfView: boolean,
+
+    /**
      * The width of the filmstrip.
      */
     _filmstripWidth: number,
@@ -73,6 +81,11 @@ type Props = {
      * Whether the filmstrip button is enabled.
      */
     _isFilmstripButtonEnabled: boolean,
+
+    /**
+     * Whether or not the current layout is vertical filmstrip.
+     */
+    _isVerticalFilmstrip: boolean,
 
     /**
      * The participants in the call.
@@ -120,6 +133,11 @@ type Props = {
     _isToolboxVisible: Boolean,
 
     /**
+     * An object containing the CSS classes.
+     */
+    classes: Object,
+
+    /**
      * The redux {@code dispatch} function.
      */
     dispatch: Dispatch<any>,
@@ -131,10 +149,88 @@ type Props = {
 };
 
 /**
+ * Creates the styles for the component.
+ *
+ * @param {Object} theme - The current theme.
+ * @returns {Object}
+ */
+const styles = theme => {
+    return {
+        toggleFilmstripContainer: {
+            display: 'flex',
+            flexWrap: 'nowrap',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, .6)',
+            width: '32px',
+            height: '24px',
+            position: 'absolute',
+            borderRadius: '4px',
+            top: 'calc(-24px - 2px)',
+            left: 'calc(50% - 16px)',
+            opacity: 0,
+            transition: 'opacity .3s'
+        },
+
+        toggleFilmstripButton: {
+            fontSize: '14px',
+            lineHeight: 1.2,
+            textAlign: 'center',
+            background: 'transparent',
+            height: 'auto',
+            width: '100%',
+            padding: 0,
+            margin: 0,
+            border: 'none',
+
+            '-webkit-appearance': 'none',
+
+            '& svg': {
+                fill: theme.palette.icon02
+            }
+        },
+
+        toggleVerticalFilmstripContainer: {
+            transform: 'rotate(-90deg)',
+            left: 'calc(-24px - 2px - 5px)',
+            top: 'calc(50% - 16px)'
+        },
+
+        filmstrip: {
+            transition: 'background .2s ease-in-out, right 1s, bottom 1s, height .3s ease-in',
+            right: 0,
+            bottom: 0,
+
+            '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, .6)',
+
+                '& .toggleFilmstripContainer': {
+                    opacity: 1
+                }
+            },
+
+            '.horizontal-filmstrip &.hidden': {
+                bottom: '-50px',
+
+                '&:hover': {
+                    backgroundColor: 'transparent'
+                }
+            },
+
+            '&.hidden': {
+                '& .toggleFilmstripContainer': {
+                    opacity: 1
+                }
+            }
+        }
+    };
+};
+
+/**
  * Implements a React {@link Component} which represents the filmstrip on
  * Web/React.
  *
- * @extends Component
+ * @augments Component
  */
 class Filmstrip extends PureComponent <Props> {
 
@@ -155,6 +251,7 @@ class Filmstrip extends PureComponent <Props> {
         this._listItemKey = this._listItemKey.bind(this);
         this._onGridItemsRendered = this._onGridItemsRendered.bind(this);
         this._onListItemsRendered = this._onListItemsRendered.bind(this);
+        this._onToggleButtonTouch = this._onToggleButtonTouch.bind(this);
     }
 
     /**
@@ -188,7 +285,7 @@ class Filmstrip extends PureComponent <Props> {
      */
     render() {
         const filmstripStyle = { };
-        const { _currentLayout } = this.props;
+        const { _currentLayout, _disableSelfView, classes, _visible } = this.props;
         const tileViewActive = _currentLayout === LAYOUTS.TILE_VIEW;
 
         switch (_currentLayout) {
@@ -196,33 +293,41 @@ class Filmstrip extends PureComponent <Props> {
             // Adding 18px for the 2px margins, 2px borders on the left and right and 5px padding on the left and right.
             // Also adding 7px for the scrollbar.
             filmstripStyle.maxWidth = (interfaceConfig.FILM_STRIP_MAX_HEIGHT || 120) + 25;
+
+            if (!_visible) {
+                filmstripStyle.right = `-${filmstripStyle.maxWidth + 2}px`;
+            }
             break;
         }
 
         let toolbar = null;
 
-        if (this.props._isFilmstripButtonEnabled) {
+        if (!this.props._iAmRecorder && this.props._isFilmstripButtonEnabled && _currentLayout !== LAYOUTS.TILE_VIEW) {
             toolbar = this._renderToggleButton();
         }
 
         return (
             <div
-                className = { `filmstrip ${this.props._className}` }
+                className = { clsx('filmstrip',
+                    this.props._className,
+                    classes.filmstrip) }
                 style = { filmstripStyle }>
                 { toolbar }
                 <div
                     className = { this.props._videosClassName }
                     id = 'remoteVideos'>
-                    <div
-                        className = 'filmstrip__videos'
-                        id = 'filmstripLocalVideo'>
-                        <div id = 'filmstripLocalVideoThumbnail'>
-                            {
-                                !tileViewActive && <Thumbnail
-                                    key = 'local' />
-                            }
+                    {!_disableSelfView && (
+                        <div
+                            className = 'filmstrip__videos'
+                            id = 'filmstripLocalVideo'>
+                            <div id = 'filmstripLocalVideoThumbnail'>
+                                {
+                                    !tileViewActive && <Thumbnail
+                                        key = 'local' />
+                                }
+                            </div>
                         </div>
-                    </div>
+                    )}
                     {
                         this._renderRemoteParticipants()
                     }
@@ -240,11 +345,11 @@ class Filmstrip extends PureComponent <Props> {
      * @returns {Object}
      */
     _calculateIndices(startIndex, stopIndex) {
-        const { _currentLayout, _iAmRecorder, _thumbnailsReordered } = this.props;
+        const { _currentLayout, _iAmRecorder, _thumbnailsReordered, _disableSelfView } = this.props;
         let start = startIndex;
         let stop = stopIndex;
 
-        if (_thumbnailsReordered) {
+        if (_thumbnailsReordered && !_disableSelfView) {
             // In tile view, the indices needs to be offset by 1 because the first thumbnail is that of the local
             // endpoint. The remote participants start from index 1.
             if (!_iAmRecorder && _currentLayout === LAYOUTS.TILE_VIEW) {
@@ -300,6 +405,7 @@ class Filmstrip extends PureComponent <Props> {
      */
     _gridItemKey({ columnIndex, rowIndex }) {
         const {
+            _disableSelfView,
             _columns,
             _iAmRecorder,
             _remoteParticipants,
@@ -309,8 +415,8 @@ class Filmstrip extends PureComponent <Props> {
         const index = (rowIndex * _columns) + columnIndex;
 
         // When the thumbnails are reordered, local participant is inserted at index 0.
-        const localIndex = _thumbnailsReordered ? 0 : _remoteParticipantsLength;
-        const remoteIndex = _thumbnailsReordered && !_iAmRecorder ? index - 1 : index;
+        const localIndex = _thumbnailsReordered && !_disableSelfView ? 0 : _remoteParticipantsLength;
+        const remoteIndex = _thumbnailsReordered && !_iAmRecorder && !_disableSelfView ? index - 1 : index;
 
         if (index > _remoteParticipantsLength - (_iAmRecorder ? 1 : 0)) {
             return `empty-${index}`;
@@ -500,6 +606,21 @@ class Filmstrip extends PureComponent <Props> {
         this._doToggleFilmstrip();
     }
 
+    _onToggleButtonTouch: (SyntheticEvent<HTMLButtonElement>) => void;
+
+    /**
+     * Handler for touch start event of the 'toggle button'.
+     *
+     * @private
+     * @param {Object} e - The synthetic event.
+     * @returns {void}
+     */
+    _onToggleButtonTouch(e: SyntheticEvent<HTMLButtonElement>) {
+        // Don't propagate the touchStart event so the toolbar doesn't get toggled.
+        e.stopPropagation();
+        this._onToolbarToggleFilmstrip();
+    }
+
     /**
      * Creates a React Element for changing the visibility of the filmstrip when
      * clicked.
@@ -509,18 +630,24 @@ class Filmstrip extends PureComponent <Props> {
      */
     _renderToggleButton() {
         const icon = this.props._visible ? IconMenuDown : IconMenuUp;
-        const { t } = this.props;
+        const { t, classes, _isVerticalFilmstrip } = this.props;
+        const actions = isMobileBrowser()
+            ? { onTouchStart: this._onToggleButtonTouch }
+            : { onClick: this._onToolbarToggleFilmstrip };
 
         return (
             <div
-                className = 'filmstrip__toolbar'>
+                className = { clsx(classes.toggleFilmstripContainer,
+                    _isVerticalFilmstrip && classes.toggleVerticalFilmstripContainer,
+                    'toggleFilmstripContainer') }>
                 <button
                     aria-expanded = { this.props._visible }
                     aria-label = { t('toolbar.accessibilityLabel.toggleFilmstrip') }
+                    className = { classes.toggleFilmstripButton }
                     id = 'toggleFilmstripButton'
-                    onClick = { this._onToolbarToggleFilmstrip }
                     onFocus = { this._onTabIn }
-                    tabIndex = { 0 }>
+                    tabIndex = { 0 }
+                    { ...actions }>
                     <Icon
                         aria-label = { t('toolbar.accessibilityLabel.toggleFilmstrip') }
                         src = { icon } />
@@ -552,6 +679,7 @@ function _mapStateToProps(state) {
         thumbnailSize: tileViewThumbnailSize
     } = state['features/filmstrip'].tileViewDimensions;
     const _currentLayout = getCurrentLayout(state);
+    const disableSelfView = shouldHideSelfView(state);
 
     const { clientHeight, clientWidth } = state['features/base/responsive-ui'];
     const availableSpace = clientHeight - filmstripHeight;
@@ -571,10 +699,13 @@ function _mapStateToProps(state) {
         && isMobileBrowser()
         && clientWidth <= ASPECT_RATIO_BREAKPOINT;
 
-    const className = `${remoteVideosVisible ? '' : 'hide-videos'} ${
-        reduceHeight ? 'reduce-height' : ''
-    } ${shiftRight ? 'shift-right' : ''} ${collapseTileView ? 'collapse' : ''}`.trim();
+    const shouldReduceHeight = reduceHeight && (
+        isMobileBrowser() || _currentLayout !== LAYOUTS.VERTICAL_FILMSTRIP_VIEW);
+
     const videosClassName = `filmstrip__videos${visible ? '' : ' hidden'}`;
+    const className = `${remoteVideosVisible ? '' : 'hide-videos'} ${
+        shouldReduceHeight ? 'reduce-height' : ''
+    } ${shiftRight ? 'shift-right' : ''} ${collapseTileView ? 'collapse' : ''} ${visible ? '' : 'hidden'}`.trim();
     let _thumbnailSize, remoteFilmstripHeight, remoteFilmstripWidth;
 
     switch (_currentLayout) {
@@ -587,7 +718,7 @@ function _mapStateToProps(state) {
         const { remote, remoteVideosContainer } = state['features/filmstrip'].verticalViewDimensions;
 
         _thumbnailSize = remote;
-        remoteFilmstripHeight = remoteVideosContainer?.height - (reduceHeight ? TOOLBAR_HEIGHT : 0);
+        remoteFilmstripHeight = remoteVideosContainer?.height - (shouldReduceHeight ? TOOLBAR_HEIGHT : 0);
         remoteFilmstripWidth = remoteVideosContainer?.width;
         break;
     }
@@ -605,6 +736,7 @@ function _mapStateToProps(state) {
         _className: className,
         _columns: gridDimensions.columns,
         _currentLayout,
+        _disableSelfView: disableSelfView,
         _filmstripHeight: remoteFilmstripHeight,
         _filmstripWidth: remoteFilmstripWidth,
         _iAmRecorder: Boolean(iAmRecorder),
@@ -617,8 +749,9 @@ function _mapStateToProps(state) {
         _thumbnailsReordered: enableThumbnailReordering,
         _videosClassName: videosClassName,
         _visible: visible,
-        _isToolboxVisible: isToolboxVisible(state)
+        _isToolboxVisible: isToolboxVisible(state),
+        _isVerticalFilmstrip: _currentLayout === LAYOUTS.VERTICAL_FILMSTRIP_VIEW
     };
 }
 
-export default translate(connect(_mapStateToProps)(Filmstrip));
+export default withStyles(styles)(translate(connect(_mapStateToProps)(Filmstrip)));
