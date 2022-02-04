@@ -44,6 +44,15 @@ import {
 import { updateSettings } from '../../react/features/base/settings';
 import { isToggleCameraEnabled, toggleCamera } from '../../react/features/base/tracks';
 import {
+    autoAssignToBreakoutRooms,
+    closeBreakoutRoom,
+    createBreakoutRoom,
+    moveToRoom,
+    removeBreakoutRoom,
+    sendParticipantToRoom
+} from '../../react/features/breakout-rooms/actions';
+import { getBreakoutRooms } from '../../react/features/breakout-rooms/functions';
+import {
     sendMessage,
     setPrivateMessageRecipient,
     toggleChat
@@ -67,9 +76,10 @@ import { toggleLobbyMode, setKnockingParticipantApproval } from '../../react/fea
 import { isForceMuted } from '../../react/features/participants-pane/functions';
 import { RECORDING_TYPES } from '../../react/features/recording/constants';
 import { getActiveSession } from '../../react/features/recording/functions';
-import { isScreenAudioSupported, isScreenVideoShared } from '../../react/features/screen-share';
+import { isScreenAudioSupported } from '../../react/features/screen-share';
 import { startScreenShareFlow, startAudioScreenShareFlow } from '../../react/features/screen-share/actions';
 import { toggleScreenshotCaptureSummary } from '../../react/features/screenshot-capture';
+import { isScreenshotCaptureEnabled } from '../../react/features/screenshot-capture/functions';
 import { playSharedVideo, stopSharedVideo } from '../../react/features/shared-video/actions.any';
 import { extractYoutubeIdOrURL } from '../../react/features/shared-video/functions';
 import { toggleTileView, setTileView } from '../../react/features/video-layout';
@@ -117,6 +127,14 @@ let videoAvailable = true;
  */
 function initCommands() {
     commands = {
+        'add-breakout-room': name => {
+            if (!isLocalParticipantModerator(APP.store.getState())) {
+                logger.error('Missing moderator rights to add breakout rooms');
+
+                return;
+            }
+            APP.store.dispatch(createBreakoutRoom(name));
+        },
         'answer-knocking-participant': (id, approved) => {
             APP.store.dispatch(setKnockingParticipantApproval(id, approved));
         },
@@ -133,6 +151,14 @@ function initCommands() {
             }
 
             APP.store.dispatch(approveParticipantAudio(participantId));
+        },
+        'auto-assign-to-breakout-rooms': () => {
+            if (!isLocalParticipantModerator(APP.store.getState())) {
+                logger.error('Missing moderator rights to auto-assign participants to breakout rooms');
+
+                return;
+            }
+            APP.store.dispatch(autoAssignToBreakoutRooms());
         },
         'display-name': displayName => {
             sendAnalytics(createApiEvent('display.name.changed'));
@@ -196,6 +222,14 @@ function initCommands() {
             const reject = mediaType === MEDIA_TYPE.VIDEO ? rejectParticipantVideo : rejectParticipantAudio;
 
             APP.store.dispatch(reject(participantId));
+        },
+        'remove-breakout-room': breakoutRoomJid => {
+            if (!isLocalParticipantModerator(APP.store.getState())) {
+                logger.error('Missing moderator rights to remove breakout rooms');
+
+                return;
+            }
+            APP.store.dispatch(removeBreakoutRoom(breakoutRoomJid));
         },
         'resize-large-video': (width, height) => {
             logger.debug('Resize large video command received');
@@ -481,9 +515,7 @@ function initCommands() {
                 return;
             }
 
-            const enableScreenshotCapture = state['features/base/config'].enableScreenshotCapture;
-
-            if (enableScreenshotCapture && isScreenVideoShared(state)) {
+            if (isScreenshotCaptureEnabled(state, true, false)) {
                 APP.store.dispatch(toggleScreenshotCaptureSummary(true));
             }
             conference.startRecording(recordingConfig);
@@ -514,9 +546,7 @@ function initCommands() {
             const activeSession = getActiveSession(state, mode);
 
             if (activeSession && activeSession.id) {
-                if (state['features/base/config'].enableScreenshotCapture) {
-                    APP.store.dispatch(toggleScreenshotCaptureSummary(false));
-                }
+                APP.store.dispatch(toggleScreenshotCaptureSummary(false));
                 conference.stopRecording(activeSession.id);
             } else {
                 logger.error('No recording or streaming session found');
@@ -539,6 +569,26 @@ function initCommands() {
         },
         'cancel-private-chat': () => {
             APP.store.dispatch(setPrivateMessageRecipient());
+        },
+        'close-breakout-room': roomId => {
+            if (!isLocalParticipantModerator(APP.store.getState())) {
+                logger.error('Missing moderator rights to close breakout rooms');
+
+                return;
+            }
+            APP.store.dispatch(closeBreakoutRoom(roomId));
+        },
+        'join-breakout-room': roomId => {
+            APP.store.dispatch(moveToRoom(roomId));
+        },
+        'send-participant-to-room': (participantId, roomId) => {
+            if (!isLocalParticipantModerator(APP.store.getState())) {
+                logger.error('Missing moderator rights to send participants to rooms');
+
+                return;
+            }
+
+            APP.store.dispatch(sendParticipantToRoom(participantId, roomId));
         },
         'kick-participant': participantId => {
             APP.store.dispatch(kickParticipant(participantId));
@@ -682,6 +732,10 @@ function initCommands() {
             callback({
                 avatarBackgrounds: APP.store.getState()['features/dynamic-branding'].avatarBackgrounds
             });
+            break;
+        }
+        case 'list-breakout-rooms': {
+            callback(getBreakoutRooms(APP.store.getState()));
             break;
         }
         default:
@@ -1151,8 +1205,8 @@ class API {
      *
      * @param {string} roomName - The room name.
      * @param {string} id - The id of the local user.
-     * @param {Object} props - The display name and avatar URL of the local
-     * user.
+     * @param {Object} props - The display name, the avatar URL of the local
+     * user and the type of the room.
      * @returns {void}
      */
     notifyConferenceJoined(roomName: string, id: string, props: Object) {
