@@ -46,6 +46,7 @@ import {
     localParticipantLeft,
     participantLeft,
     participantUpdated,
+    raiseHand,
     raiseHandUpdateQueue,
     setLoadableAvatarUrl
 } from './actions';
@@ -64,11 +65,10 @@ import {
     getParticipantDisplayName,
     getRaiseHandsQueue,
     getRemoteParticipants,
+    hasRaisedHand,
     isLocalParticipantModerator
 } from './functions';
 import { PARTICIPANT_JOINED_FILE, PARTICIPANT_LEFT_FILE } from './sounds';
-
-import { hasRaisedHand, raiseHand } from '.';
 
 declare var APP: Object;
 
@@ -603,7 +603,6 @@ function _raiseHandUpdated({ dispatch, getState }, conference, participantId, ne
             titleKey: 'notify.somebody',
             title: notificationTitle,
             descriptionKey: 'notify.raisedHand',
-            raiseHandNotification: true,
             concatText: true,
             uid: RAISE_HAND_NOTIFICATION_ID,
             ...action

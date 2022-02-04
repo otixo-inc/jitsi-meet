@@ -361,7 +361,7 @@
         "shareScreenWarningD2": "vous devez arrêter le partage d'audio, démarrer le partage d'écran et cocher l'option  \"Partager l'audio\".",
         "shareScreenWarningH1": "Si vous voulez partager uniquement votre écran:",
         "shareScreenWarningTitle": "Vous devez cesser de partager votre audio avant de partager votre écran",
-        "shareVideoLinkError": "Veuillez renseigner un lien Youtube fonctionnel.",
+        "shareVideoLinkError": "Veuillez renseigner un lien de diffusion vidéo fonctionnel.",
         "shareVideoTitle": "Partager une vidéo",
         "shareYourScreen": "Partager votre écran",
         "shareYourScreenDisabled": "Le partage d'écran est désactivé.",
@@ -642,6 +642,8 @@
         "oldElectronClientDescription1": "Vous semblez utiliser une ancienne version du client Jitsi Meet qui présente des failles de sécurité connues. Veuillez vous assurer de mettre à jour vers notre ",
         "oldElectronClientDescription2": "dernière build",
         "oldElectronClientDescription3": " rapidement !",
+        "participantWantsToJoin": "souhaite rejoindre la réunion",
+        "participantsWantToJoin": "souhaitent rejoindre la réunion",
         "passwordRemovedRemotely": "Le $t(lockRoomPassword) a été supprimé par un autre participant",
         "passwordSetRemotely": "Un $t(lockRoomPassword) a été défini par un autre participant",
         "raiseHandAction": "Lever la main",
@@ -661,7 +663,9 @@
         "videoMutedRemotelyDescription": "Vous pouvez toujours la réactiver.",
         "videoMutedRemotelyTitle": "Votre caméra a été coupée par {{participantDisplayName}}!",
         "videoUnmuteBlockedDescription": "Le rétablissement de la vidéo a été bloqué temporairement en raison de limites système.",
-        "videoUnmuteBlockedTitle": "Rétablissement de la caméra bloqué !"
+        "videoUnmuteBlockedTitle": "Rétablissement de la caméra bloqué !",
+        "viewLobby": "Voir la salle d'attente",
+        "waitingParticipants": "{{waitingParticipants}} personnes"
     },
     "participantsPane": {
         "actions": {
@@ -999,7 +1003,7 @@
             "shareRoom": "Inviter quelqu'un",
             "shareYourScreen": "Activer / Désactiver le partage d'écran",
             "shareaudio": "Partager l'audio",
-            "sharedvideo": "Démarrer / Arrêter le partage de vidéo YouTube",
+            "sharedvideo": "Démarrer / Arrêter le partage de vidéo",
             "shortcuts": "Afficher / Masquer les raccourcis",
             "show": "Afficher en premier plan",
             "silence": "Silence",
@@ -1076,7 +1080,7 @@
         "selectBackground": "Sélectionner un arrière-plan",
         "shareRoom": "Inviter quelqu'un",
         "shareaudio": "Partager l'audio",
-        "sharedvideo": "Partager une vidéo YouTube",
+        "sharedvideo": "Partager une vidéo",
         "shortcuts": "Afficher les raccourcis",
         "silence": "Silence",
         "speakerStats": "Statistiques de l'interlocuteur",
@@ -1084,7 +1088,7 @@
         "startSubtitles": "Activer les sous-titres",
         "stopAudioSharing": "Arrêter le partage son",
         "stopScreenSharing": "Arrêter le partage d'écran",
-        "stopSharedVideo": "Arrêter la vidéo YouTube",
+        "stopSharedVideo": "Arrêter la vidéo",
         "stopSubtitles": "Désactiver les sous-titres",
         "surprised": "Surpris",
         "talkWhileMutedPopup": "Vous voulez parler ? Votre micro est coupé.",
@@ -1161,6 +1165,7 @@
         "mute": "Un participant a coupé son micro",
         "muted": "Muet",
         "remoteControl": "Démarrer / Arrêter le contrôle à distance",
+        "screenSharing": "Cette personne partage son écran",
         "show": "Afficher en premier plan",
         "videoMuted": "Caméra coupée",
         "videomute": "Le participant a arrêté la caméra"
