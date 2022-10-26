@@ -224,7 +224,7 @@ const PreMeetingScreen = ({
                         <h1 className = { classes.title }>
                             {title}
                         </h1>
-                        {_roomName && (
+                        {/* {_roomName && (
                             <span className = { classes.roomNameContainer }>
                                 {isOverflowing ? (
                                     <Tooltip content = { _roomName }>
@@ -242,7 +242,7 @@ const PreMeetingScreen = ({
                                     </span>
                                 )}
                             </span>
-                        )}
+                        )} */}
                         {children}
                         {_buttons.length && <Toolbox toolbarButtons = { _buttons } />}
                         {skipPrejoinButton}
