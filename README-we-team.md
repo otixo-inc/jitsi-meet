@@ -35,4 +35,8 @@ Find the latest Jitsi release here: https://github.com/jitsi/jitsi-meet/releases
 
 The release should be tagged. e.g. `stable/jitsi-meet_7882`
 
-You should rebase this branch on to our `master` branch.
+You should merge this branch on to our `main` branch:
+
+```
+git merge stable/jitsi-meet_7882
+```

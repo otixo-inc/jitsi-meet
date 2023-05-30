@@ -249,12 +249,12 @@ function _mapStateToProps(state: IReduxState, ownProps: any) {
             _showJitsiWatermark = !customizationFailed && Boolean(logoImageUrl);
         } else if (defaultBranding) {
             _logoUrl = defaultLogoUrl;
-            _logoLink = JITSI_WATERMARK_LINK;
+            _logoLink = "https://we.team";
         }
     } else {
         // When there is no custom branding data use defaults
         _logoUrl = ownProps.defaultJitsiLogoURL || defaultLogoUrl;
-        _logoLink = JITSI_WATERMARK_LINK;
+        _logoLink = "https://we.team";
     }
 
     return {
