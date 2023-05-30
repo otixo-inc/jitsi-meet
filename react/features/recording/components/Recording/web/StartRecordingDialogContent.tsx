@@ -1,23 +1,18 @@
-/* eslint-disable lines-around-comment  */
 import React from 'react';
+import { connect } from 'react-redux';
 
 import { translate } from '../../../../base/i18n/functions';
-import {
-    Container,
-    Image,
-    LoadingIndicator,
-    Switch,
-    Text
-    // @ts-ignore
-} from '../../../../base/react';
-import { connect } from '../../../../base/redux/functions';
+import Container from '../../../../base/react/components/web/Container';
+import Image from '../../../../base/react/components/web/Image';
+import LoadingIndicator from '../../../../base/react/components/web/LoadingIndicator';
+import Text from '../../../../base/react/components/web/Text';
 import Button from '../../../../base/ui/components/web/Button';
-import { BUTTON_TYPES } from '../../../../base/ui/constants';
+import Switch from '../../../../base/ui/components/web/Switch';
+import { BUTTON_TYPES } from '../../../../base/ui/constants.web';
 import { RECORDING_TYPES } from '../../../constants';
-// @ts-ignore
 import { getRecordingDurationEstimation } from '../../../functions';
 import AbstractStartRecordingDialogContent, {
-    Props,
+    IProps,
     mapStateToProps
 } from '../AbstractStartRecordingDialogContent';
 import {
@@ -25,16 +20,17 @@ import {
     ICON_CLOUD,
     ICON_INFO,
     ICON_USERS,
-    LOCAL_RECORDING,
-    TRACK_COLOR
-    // @ts-ignore
+    LOCAL_RECORDING
 } from '../styles.web';
 
+const EMPTY_FUNCTION = () => {
+    // empty
+};
 
 /**
  * The start recording dialog content for the mobile application.
  */
-class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Props> {
+class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<IProps> {
     /**
      * Renders the component.
      *
@@ -76,11 +72,10 @@ class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Pr
             = integrationsEnabled || _localRecordingAvailable
                 ? (
                     <Switch
+                        checked = { selectedRecordingService === RECORDING_TYPES.JITSI_REC_SERVICE }
                         className = 'recording-switch'
                         disabled = { isValidating }
-                        onValueChange = { this._onRecordingServiceSwitchChange }
-                        trackColor = {{ false: TRACK_COLOR }}
-                        value = { selectedRecordingService === RECORDING_TYPES.JITSI_REC_SERVICE } />
+                        onChange = { this._onRecordingServiceSwitchChange } />
                 ) : null;
 
         const label = isVpaas ? t('recording.serviceDescriptionCloud') : t('recording.serviceDescription');
@@ -125,7 +120,6 @@ class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Pr
             onSharingSettingChanged,
             sharingSetting,
             t
-            // @ts-ignore
         } = this.props;
 
         return (
@@ -141,11 +135,10 @@ class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Pr
                     { t('recording.fileSharingdescription') }
                 </Text>
                 <Switch
+                    checked = { sharingSetting }
                     className = 'recording-switch'
                     disabled = { isValidating }
-                    onValueChange = { onSharingSettingChanged }
-                    trackColor = {{ false: TRACK_COLOR }}
-                    value = { sharingSetting } />
+                    onChange = { onSharingSettingChanged } />
             </Container>
         );
     }
@@ -188,9 +181,7 @@ class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Pr
      */
     _renderSpinner() {
         return (
-            <LoadingIndicator
-                isCompleting = { false }
-                size = 'small' />
+            <LoadingIndicator size = 'small' />
         );
     }
 
@@ -282,12 +273,11 @@ class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Pr
         if (fileRecordingsServiceEnabled || _localRecordingAvailable) {
             switchContent = (
                 <Switch
+                    checked = { selectedRecordingService
+                        === RECORDING_TYPES.DROPBOX }
                     className = 'recording-switch'
                     disabled = { isValidating }
-                    onValueChange = { this._onDropboxSwitchChange }
-                    trackColor = {{ false: TRACK_COLOR }}
-                    value = { selectedRecordingService
-                        === RECORDING_TYPES.DROPBOX } />
+                    onChange = { this._onDropboxSwitchChange } />
             );
         }
 
@@ -351,12 +341,11 @@ class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Pr
                             { t('recording.saveLocalRecording') }
                         </Text>
                         <Switch
+                            checked = { selectedRecordingService
+                                === RECORDING_TYPES.LOCAL }
                             className = 'recording-switch'
                             disabled = { isValidating }
-                            onValueChange = { this._onLocalRecordingSwitchChange }
-                            trackColor = {{ false: TRACK_COLOR }}
-                            value = { selectedRecordingService
-                                === RECORDING_TYPES.LOCAL } />
+                            onChange = { this._onLocalRecordingSwitchChange } />
                     </Container>
                 </Container>
                 {selectedRecordingService === RECORDING_TYPES.LOCAL && (
@@ -373,11 +362,10 @@ class StartRecordingDialogContent extends AbstractStartRecordingDialogContent<Pr
                                         {t('recording.onlyRecordSelf')}
                                     </Text>
                                     <Switch
+                                        checked = { Boolean(localRecordingOnlySelf) }
                                         className = 'recording-switch'
                                         disabled = { isValidating }
-                                        onValueChange = { onLocalRecordingSelfChange }
-                                        trackColor = {{ false: TRACK_COLOR }}
-                                        value = { localRecordingOnlySelf } />
+                                        onChange = { onLocalRecordingSelfChange ?? EMPTY_FUNCTION } />
                                 </Container>
                             </Container>
                         )}

@@ -1,26 +1,20 @@
-/* eslint-disable import/order */
 import { generateCollaborationLinkData } from '@jitsi/excalidraw';
+
 import { IStore } from '../app/types';
-
-import { participantJoined, participantLeft, pinParticipant } from '../base/participants/actions';
-
-// @ts-ignore
 import { getCurrentConference } from '../base/conference/functions';
-
-// @ts-ignore
-import { MiddlewareRegistry, StateListenerRegistry } from '../base/redux';
-import { RESET_WHITEBOARD, SET_WHITEBOARD_OPEN } from './actionTypes';
-import { getCollabDetails, getCollabServerUrl, isWhiteboardPresent } from './functions';
-import { WHITEBOARD_ID, WHITEBOARD_PARTICIPANT_NAME } from './constants';
-import { resetWhiteboard, setWhiteboardOpen, setupWhiteboard } from './actions';
-import { getCurrentRoomId } from '../breakout-rooms/functions';
-
-// @ts-ignore
-import { addStageParticipant } from '../filmstrip/actions.web';
-
-// @ts-ignore
-import { isStageFilmstripAvailable } from '../filmstrip/functions';
 import { JitsiConferenceEvents } from '../base/lib-jitsi-meet';
+import { participantJoined, participantLeft, pinParticipant } from '../base/participants/actions';
+import { FakeParticipant } from '../base/participants/types';
+import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
+import StateListenerRegistry from '../base/redux/StateListenerRegistry';
+import { getCurrentRoomId } from '../breakout-rooms/functions';
+import { addStageParticipant } from '../filmstrip/actions.web';
+import { isStageFilmstripAvailable } from '../filmstrip/functions';
+
+import { RESET_WHITEBOARD, SET_WHITEBOARD_OPEN } from './actionTypes';
+import { resetWhiteboard, setWhiteboardOpen, setupWhiteboard } from './actions';
+import { WHITEBOARD_ID, WHITEBOARD_PARTICIPANT_NAME } from './constants';
+import { getCollabDetails, getCollabServerUrl, isWhiteboardPresent } from './functions';
 
 const focusWhiteboard = (store: IStore) => {
     const { dispatch, getState } = store;
@@ -32,9 +26,8 @@ const focusWhiteboard = (store: IStore) => {
     if (!isPresent) {
         dispatch(participantJoined({
             conference,
+            fakeParticipant: FakeParticipant.Whiteboard,
             id: WHITEBOARD_ID,
-            isFakeParticipant: true,
-            isWhiteboard: true,
             name: WHITEBOARD_PARTICIPANT_NAME
         }));
     }
@@ -61,19 +54,19 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => async (action
         const existingCollabDetails = getCollabDetails(state);
 
         if (!existingCollabDetails) {
-            const collabDetails = await generateCollaborationLinkData();
+            const collabLinkData = await generateCollaborationLinkData();
             const collabServerUrl = getCollabServerUrl(state);
+            const roomId = getCurrentRoomId(state);
+            const collabDetails = {
+                roomId,
+                roomKey: collabLinkData.roomKey
+            };
 
             focusWhiteboard(store);
-            dispatch(setupWhiteboard({
-                collabDetails: {
-                    roomId: getCurrentRoomId(state),
-                    roomKey: collabDetails.roomKey
-                }
-            }));
-            conference.getMetadataHandler().setMetadata(WHITEBOARD_ID, {
+            dispatch(setupWhiteboard({ collabDetails }));
+            conference?.getMetadataHandler().setMetadata(WHITEBOARD_ID, {
                 collabServerUrl,
-                roomKey: collabDetails.roomKey
+                collabDetails
             });
 
             return;
@@ -85,11 +78,11 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => async (action
             return;
         }
 
-        dispatch(participantLeft(WHITEBOARD_ID, conference, { isWhiteboard: true }));
+        dispatch(participantLeft(WHITEBOARD_ID, conference, { fakeParticipant: FakeParticipant.Whiteboard }));
         break;
     }
     case RESET_WHITEBOARD: {
-        dispatch(participantLeft(WHITEBOARD_ID, conference, { isWhiteboard: true }));
+        dispatch(participantLeft(WHITEBOARD_ID, conference, { fakeParticipant: FakeParticipant.Whiteboard }));
         break;
     }
     }
@@ -102,12 +95,8 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => async (action
  * is left or failed, e.g. Disable the whiteboard if it's left open.
  */
 StateListenerRegistry.register(
-
-    // @ts-ignore
     state => getCurrentConference(state),
-
-    // @ts-ignore
-    (conference, { dispatch, getState }, previousConference): void => {
+    (conference, { dispatch }, previousConference): void => {
         if (conference !== previousConference) {
             dispatch(resetWhiteboard());
         }
@@ -115,10 +104,7 @@ StateListenerRegistry.register(
             conference.on(JitsiConferenceEvents.METADATA_UPDATED, (metadata: any) => {
                 if (metadata[WHITEBOARD_ID]) {
                     dispatch(setupWhiteboard({
-                        collabDetails: {
-                            roomId: getCurrentRoomId(getState()),
-                            roomKey: metadata[WHITEBOARD_ID].roomKey
-                        }
+                        collabDetails: metadata[WHITEBOARD_ID].collabDetails
                     }));
                     dispatch(setWhiteboardOpen(true));
                 }

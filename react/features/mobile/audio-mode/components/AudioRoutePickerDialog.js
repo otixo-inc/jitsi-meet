@@ -1,20 +1,21 @@
 import _ from 'lodash';
 import React, { Component } from 'react';
 import { NativeModules, Text, TouchableHighlight, View } from 'react-native';
+import { connect } from 'react-redux';
 
-import { BottomSheet, hideSheet } from '../../../base/dialog';
+import { hideSheet } from '../../../base/dialog/actions';
+import BottomSheet from '../../../base/dialog/components/native/BottomSheet';
 import { bottomSheetStyles } from '../../../base/dialog/components/native/styles';
-import { translate } from '../../../base/i18n';
+import { translate } from '../../../base/i18n/functions';
+import Icon from '../../../base/icons/components/Icon';
 import {
-    Icon,
+    IconBluetooth,
     IconCar,
-    IconDeviceBluetooth,
-    IconDeviceEarpiece,
     IconDeviceHeadphone,
-    IconDeviceSpeaker
-} from '../../../base/icons';
-import { connect } from '../../../base/redux';
-import { ColorPalette } from '../../../base/styles';
+    IconPhoneRinging,
+    IconVolumeUp
+} from '../../../base/icons/svg';
+import BaseTheme from '../../../base/ui/components/BaseTheme.native';
 
 import styles from './styles';
 
@@ -115,7 +116,7 @@ type State = {
  */
 const deviceInfoMap = {
     BLUETOOTH: {
-        icon: IconDeviceBluetooth,
+        icon: IconBluetooth,
         text: 'audioDevices.bluetooth',
         type: 'BLUETOOTH'
     },
@@ -125,7 +126,7 @@ const deviceInfoMap = {
         type: 'CAR'
     },
     EARPIECE: {
-        icon: IconDeviceEarpiece,
+        icon: IconPhoneRinging,
         text: 'audioDevices.phone',
         type: 'EARPIECE'
     },
@@ -135,7 +136,7 @@ const deviceInfoMap = {
         type: 'HEADPHONES'
     },
     SPEAKER: {
-        icon: IconDeviceSpeaker,
+        icon: IconVolumeUp,
         text: 'audioDevices.speaker',
         type: 'SPEAKER'
     }
@@ -240,12 +241,18 @@ class AudioRoutePickerDialog extends Component<Props, State> {
     _renderDevice(device: Device) {
         const { icon, selected, text } = device;
         const selectedStyle = selected ? styles.selectedText : {};
+        const borderRadiusHighlightStyles = {
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16
+        };
+        const speakerDeviceIsNotSelected = device.type !== 'SPEAKER';
 
         return (
             <TouchableHighlight
                 key = { device.type }
                 onPress = { this._onSelectDeviceFn(device) }
-                underlayColor = { ColorPalette.overflowMenuItemUnderlay } >
+                style = { speakerDeviceIsNotSelected && borderRadiusHighlightStyles }
+                underlayColor = { BaseTheme.palette.ui04 } >
                 <View style = { styles.deviceRow } >
                     <Icon
                         src = { icon }

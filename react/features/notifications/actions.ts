@@ -19,6 +19,7 @@ import {
     SILENT_JOIN_THRESHOLD,
     SILENT_LEFT_THRESHOLD
 } from './constants';
+import { INotificationProps } from './types';
 
 /**
  * Function that returns notification timeout value based on notification timeout type.
@@ -89,23 +90,6 @@ export function setNotificationsEnabled(enabled: boolean) {
     };
 }
 
-interface INotificationProps {
-    appearance?: string;
-    concatText?: boolean;
-    customActionHandler?: Function[];
-    customActionNameKey?: string[];
-    description?: string;
-    descriptionKey?: string;
-    icon?: string;
-    sticky?: boolean;
-    title?: string;
-    titleArguments?: {
-        [key: string]: string;
-    };
-    titleKey?: string;
-    uid?: string;
-}
-
 /**
  * Queues an error notification for display.
  *
@@ -132,19 +116,25 @@ export function showNotification(props: INotificationProps = {}, type?: string) 
         const { disabledNotifications = [], notifications, notificationTimeouts } = getState()['features/base/config'];
         const enabledFlag = getFeatureFlag(getState(), NOTIFICATIONS_ENABLED, true);
 
+        const { descriptionKey, titleKey } = props;
+
         const shouldDisplay = enabledFlag
-            && !(disabledNotifications.includes(props.descriptionKey ?? '')
-                || disabledNotifications.includes(props.titleKey ?? ''))
+            && !(disabledNotifications.includes(descriptionKey ?? '')
+                || disabledNotifications.includes(titleKey ?? ''))
             && (!notifications
-                || notifications.includes(props.descriptionKey ?? '')
-                || notifications.includes(props.titleKey ?? ''));
+                || notifications.includes(descriptionKey ?? '')
+                || notifications.includes(titleKey ?? ''));
+
+        if (typeof APP !== 'undefined') {
+            APP.API.notifyNotificationTriggered(titleKey, descriptionKey);
+        }
 
         if (shouldDisplay) {
             return dispatch({
                 type: SHOW_NOTIFICATION,
                 props,
                 timeout: getNotificationTimeout(type, notificationTimeouts),
-                uid: props.uid || window.Date.now().toString()
+                uid: props.uid || Date.now().toString()
             });
         }
     };

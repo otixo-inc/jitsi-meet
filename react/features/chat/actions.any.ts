@@ -1,7 +1,7 @@
 import { IStore } from '../app/types';
 import { getCurrentConference } from '../base/conference/functions';
 import { getLocalParticipant } from '../base/participants/functions';
-import { Participant } from '../base/participants/types';
+import { IParticipant } from '../base/participants/types';
 import { LOBBY_CHAT_INITIALIZED } from '../lobby/constants';
 
 import {
@@ -114,13 +114,13 @@ export function sendMessage(message: string, ignorePrivacy = false) {
 /**
  * Initiates the sending of a private message to the supplied participant.
  *
- * @param {Participant} participant - The participant to set the recipient to.
+ * @param {IParticipant} participant - The participant to set the recipient to.
  * @returns {{
- *     participant: Participant,
+ *     participant: IParticipant,
  *     type: SET_PRIVATE_MESSAGE_RECIPIENT
  * }}
  */
-export function setPrivateMessageRecipient(participant: Object) {
+export function setPrivateMessageRecipient(participant?: Object) {
     return {
         participant,
         type: SET_PRIVATE_MESSAGE_RECIPIENT
@@ -148,12 +148,12 @@ export function setIsPollsTabFocused(isPollsTabFocused: boolean) {
  *
  * @returns {Function}
  */
-export function onLobbyChatInitialized(lobbyChatInitializedInfo: { attendee: Participant; moderator: Participant; }) {
+export function onLobbyChatInitialized(lobbyChatInitializedInfo: { attendee: IParticipant; moderator: IParticipant; }) {
     return async (dispatch: IStore['dispatch'], getState: IStore['getState']) => {
         const state = getState();
         const conference = getCurrentConference(state);
 
-        const lobbyLocalId = conference.myLobbyUserId();
+        const lobbyLocalId = conference?.myLobbyUserId();
 
         if (!lobbyLocalId) {
             return;

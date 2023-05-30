@@ -1,5 +1,3 @@
-// @flow
-
 /**
  * Flag indicating if add-people functionality should be enabled.
  * Default: enabled (true).
@@ -161,10 +159,22 @@ export const OVERFLOW_MENU_ENABLED = 'overflow-menu.enabled';
 export const PIP_ENABLED = 'pip.enabled';
 
 /**
+ * Flag indicating if Picture-in-Picture button should be shown while screen sharing.
+ * Default: disabled (false).
+ */
+export const PIP_WHILE_SCREEN_SHARING_ENABLED = 'pip-while-screen-sharing.enabled';
+
+/**
  * Flag indicating if the prejoin page should be enabled.
  * Default: enabled (true).
  */
 export const PREJOIN_PAGE_ENABLED = 'prejoinpage.enabled';
+
+/**
+ * Flag indicating if the participant name editing field should be displayed on the prejoin page.
+ * Default: disabled (false).
+ */
+export const PREJOIN_PAGE_HIDE_DISPLAY_NAME = 'prejoinpage.hideDisplayName';
 
 /**
  * Flag indicating if raise hand feature should be enabled.
@@ -208,6 +218,12 @@ export const SECURITY_OPTIONS_ENABLED = 'security-options.enabled';
  * Default: enabled (true).
  */
 export const SERVER_URL_CHANGE_ENABLED = 'server-url-change.enabled';
+
+/**
+ * Flag indicating if settings should be enabled.
+ * Default: enabled (true).
+ */
+export const SETTINGS_ENABLED = 'settings.enabled';
 
 /**
  * Flag indicating if tile view feature should be enabled.

@@ -1,4 +1,6 @@
-import { IState } from '../app/types';
+import { IReduxState } from '../app/types';
+
+export * from './functions.any';
 
 /**
  * Returns the visibility state of the reactions menu.
@@ -6,6 +8,6 @@ import { IState } from '../app/types';
  * @param {Object} state - The state of the application.
  * @returns {boolean}
  */
-export function getReactionsMenuVisibility(state: IState): boolean {
+export function getReactionsMenuVisibility(state: IReduxState): boolean {
     return state['features/reactions'].visible;
 }

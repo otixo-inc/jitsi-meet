@@ -46,20 +46,15 @@
         "today": "Today"
     },
     "chat": {
-        "error": "Error: your message \"{{originalText}}\" was not sent. Reason: {{error}}",
-        "fieldPlaceHolder": "",
-        "messageTo": "",
         "messagebox": "Type a message",
         "nickname": {
             "popover": "Choose a nickname",
             "title": "Enter a nickname to use chat",
             "titleWithPolls": "Enter a nickname to use chat"
         },
-        "noMessagesMessage": "",
-        "privateNotice": "",
+        "sendButton": "Send",
         "title": "Chat",
-        "titleWithPolls": "Chat",
-        "you": ""
+        "titleWithPolls": "Chat"
     },
     "chromeExtensionBanner": {
         "buttonText": "",
@@ -364,7 +359,7 @@
         "mute": "Mute or unmute your microphone",
         "pushToTalk": "Press to transmit",
         "raiseHand": "Raise or lower your hand",
-        "showSpeakerStats": "Show speaker stats",
+        "showSpeakerStats": "Show participants stats",
         "toggleChat": "Open or close the chat",
         "toggleFilmstrip": "Show or hide video thumbnails",
         "toggleScreensharing": "Switch between camera and screen sharing",
@@ -401,6 +396,7 @@
         "signedInAs": "You are currently signed in as:",
         "start": "Start a live stream",
         "streamIdHelp": "What's this?",
+        "title": "Live Stream",
         "unavailableTitle": "Live Streaming unavailable",
         "youtubeTerms": "YouTube terms of services"
     },
@@ -516,6 +512,7 @@
         "serviceName": "Recording service",
         "signIn": "Sign in",
         "signOut": "Sign out",
+        "title": "Recording",
         "unavailable": "Oops! The {{serviceName}} is currently unavailable. We're working on resolving the issue. Please try again later.",
         "unavailableTitle": "Recording unavailable"
     },
@@ -576,7 +573,7 @@
         "minutes": "{{count}}m",
         "name": "Name",
         "seconds": "{{count}}s",
-        "speakerStats": "Speaker Stats",
+        "speakerStats": "Participants Stats",
         "speakerTime": "Speaker Time"
     },
     "startupoverlay": {
@@ -623,7 +620,7 @@
             "sharedvideo": "Toggle video sharing",
             "shortcuts": "Toggle shortcuts",
             "show": "Show on stage",
-            "speakerStats": "Toggle speaker statistics",
+            "speakerStats": "Toggle participants statistics",
             "tileView": "Toggle tile view",
             "toggleCamera": "Toggle camera",
             "videoblur": "",
@@ -659,7 +656,7 @@
         "shareRoom": "Invite someone",
         "sharedvideo": "Share video",
         "shortcuts": "View shortcuts",
-        "speakerStats": "Speaker stats",
+        "speakerStats": "Participants stats",
         "startScreenSharing": "Start screen sharing",
         "startSubtitles": "Start subtitles",
         "startvideoblur": "",

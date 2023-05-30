@@ -1,7 +1,5 @@
-/* eslint-disable lines-around-comment */
 import { Sounds } from '../config/configType';
-// @ts-ignore
-import type { AudioElement } from '../media';
+import { AudioElement } from '../media/components/AbstractAudio';
 
 import {
     PLAY_SOUND,
@@ -11,7 +9,6 @@ import {
     _ADD_AUDIO_ELEMENT,
     _REMOVE_AUDIO_ELEMENT
 } from './actionTypes';
-// @ts-ignore
 import { getSoundsPath } from './functions';
 import { getDisabledSounds } from './functions.any';
 

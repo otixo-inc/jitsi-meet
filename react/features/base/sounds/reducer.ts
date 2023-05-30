@@ -1,6 +1,4 @@
-/* eslint-disable lines-around-comment */
-// @ts-ignore
-import type { AudioElement } from '../media';
+import { AudioElement } from '../media/components/AbstractAudio';
 import ReducerRegistry from '../redux/ReducerRegistry';
 import { assign } from '../redux/functions';
 
@@ -10,7 +8,6 @@ import {
     _ADD_AUDIO_ELEMENT,
     _REMOVE_AUDIO_ELEMENT
 } from './actionTypes';
-import logger from './logger';
 
 /**
  * The structure use by this reducer to describe a sound.
@@ -27,7 +24,9 @@ export type Sound = {
     /**
      * This field is container for all optional parameters related to the sound.
      */
-    options?: Object;
+    options?: {
+        loop: boolean;
+    };
 
     /**
      * This field describes the source of the audio resource to be played. It
@@ -97,8 +96,6 @@ function _addOrRemoveAudioElement(state: ISoundsState, action: any) {
                     audioElement: undefined
                 }));
         }
-    } else {
-        logger.warn(`${action.type}: no sound for id: ${soundId}`);
     }
 
     return nextState;

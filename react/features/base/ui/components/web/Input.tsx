@@ -1,4 +1,3 @@
-import { Theme } from '@mui/material';
 import React, { useCallback } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { makeStyles } from 'tss-react/mui';
@@ -7,10 +6,11 @@ import { isMobileBrowser } from '../../../environment/utils';
 import Icon from '../../../icons/components/Icon';
 import { IconCloseCircle } from '../../../icons/svg';
 import { withPixelLineHeight } from '../../../styles/functions.web';
-import { InputProps } from '../types';
+import { IInputProps } from '../types';
 
-interface IInputProps extends InputProps {
+interface IProps extends IInputProps {
     accessibilityLabel?: string;
+    autoComplete?: string;
     autoFocus?: boolean;
     bottomLabel?: string;
     className?: string;
@@ -20,12 +20,17 @@ interface IInputProps extends InputProps {
     maxRows?: number;
     minRows?: number;
     name?: string;
+    onBlur?: (e: any) => void;
+    onFocus?: (event: React.FocusEvent) => void;
     onKeyPress?: (e: React.KeyboardEvent) => void;
+    readOnly?: boolean;
+    required?: boolean;
+    testId?: string;
     textarea?: boolean;
     type?: 'text' | 'email' | 'number' | 'password';
 }
 
-const useStyles = makeStyles()((theme: Theme) => {
+const useStyles = makeStyles()(theme => {
     return {
         inputContainer: {
             display: 'flex',
@@ -49,6 +54,7 @@ const useStyles = makeStyles()((theme: Theme) => {
 
         input: {
             backgroundColor: theme.palette.ui03,
+            background: theme.palette.ui03,
             color: theme.palette.text01,
             ...withPixelLineHeight(theme.typography.bodyShortRegular),
             padding: '10px 16px',
@@ -127,8 +133,9 @@ const useStyles = makeStyles()((theme: Theme) => {
     };
 });
 
-const Input = React.forwardRef<any, IInputProps>(({
+const Input = React.forwardRef<any, IProps>(({
     accessibilityLabel,
+    autoComplete,
     autoFocus,
     bottomLabel,
     className,
@@ -143,20 +150,25 @@ const Input = React.forwardRef<any, IInputProps>(({
     maxRows,
     minRows,
     name,
+    onBlur,
     onChange,
+    onFocus,
     onKeyPress,
     placeholder,
+    readOnly = false,
+    required,
+    testId,
     textarea = false,
     type = 'text',
     value
-}: IInputProps, ref) => {
+}: IProps, ref) => {
     const { classes: styles, cx } = useStyles();
     const isMobile = isMobileBrowser();
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-        onChange(e.target.value), []);
+        onChange?.(e.target.value), []);
 
-    const clearInput = useCallback(() => onChange(''), []);
+    const clearInput = useCallback(() => onChange?.(''), []);
 
     return (
         <div className = { cx(styles.inputContainer, className) }>
@@ -171,33 +183,43 @@ const Input = React.forwardRef<any, IInputProps>(({
                 {textarea ? (
                     <TextareaAutosize
                         aria-label = { accessibilityLabel }
-                        autoFocus = { autoFocus }
-                        className = { cx(styles.input, isMobile && 'is-mobile',
-                            error && 'error', clearable && styles.clearableInput, icon && 'icon-input') }
-                        disabled = { disabled }
-                        { ...(id ? { id } : {}) }
-                        maxRows = { maxRows }
-                        minRows = { minRows }
-                        name = { name }
-                        onChange = { handleChange }
-                        onKeyPress = { onKeyPress }
-                        placeholder = { placeholder }
-                        ref = { ref }
-                        value = { value } />
-                ) : (
-                    <input
-                        aria-label = { accessibilityLabel }
+                        autoComplete = { autoComplete }
                         autoFocus = { autoFocus }
                         className = { cx(styles.input, isMobile && 'is-mobile',
                             error && 'error', clearable && styles.clearableInput, icon && 'icon-input') }
                         disabled = { disabled }
                         { ...(id ? { id } : {}) }
                         maxLength = { maxLength }
+                        maxRows = { maxRows }
+                        minRows = { minRows }
                         name = { name }
                         onChange = { handleChange }
                         onKeyPress = { onKeyPress }
                         placeholder = { placeholder }
+                        readOnly = { readOnly }
                         ref = { ref }
+                        required = { required }
+                        value = { value } />
+                ) : (
+                    <input
+                        aria-label = { accessibilityLabel }
+                        autoComplete = { autoComplete }
+                        autoFocus = { autoFocus }
+                        className = { cx(styles.input, isMobile && 'is-mobile',
+                            error && 'error', clearable && styles.clearableInput, icon && 'icon-input') }
+                        data-testid = { testId }
+                        disabled = { disabled }
+                        { ...(id ? { id } : {}) }
+                        maxLength = { maxLength }
+                        name = { name }
+                        onBlur = { onBlur }
+                        onChange = { handleChange }
+                        onFocus = { onFocus }
+                        onKeyPress = { onKeyPress }
+                        placeholder = { placeholder }
+                        readOnly = { readOnly }
+                        ref = { ref }
+                        required = { required }
                         type = { type }
                         value = { value } />
                 )}

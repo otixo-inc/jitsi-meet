@@ -1,25 +1,22 @@
-/* eslint-disable lines-around-comment */
-
-import { Theme } from '@mui/material';
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
-import { IState } from '../../../../../app/types';
-import ListItem from '../../../../../base/components/participants-pane-list/ListItem';
+import { IReduxState } from '../../../../../app/types';
 import Icon from '../../../../../base/icons/components/Icon';
 import { IconArrowDown, IconArrowUp } from '../../../../../base/icons/svg';
 import { isLocalParticipantModerator } from '../../../../../base/participants/functions';
 import { withPixelLineHeight } from '../../../../../base/styles/functions.web';
-// @ts-ignore
+import ListItem from '../../../../../base/ui/components/web/ListItem';
+import { IRoom } from '../../../../../breakout-rooms/types';
 import { showOverflowDrawer } from '../../../../../toolbox/functions.web';
 import { ACTION_TRIGGER } from '../../../../constants';
 import { participantMatchesSearch } from '../../../../functions';
 import ParticipantActionEllipsis from '../../../web/ParticipantActionEllipsis';
 import ParticipantItem from '../../../web/ParticipantItem';
 
-type Props = {
+interface IProps {
 
     /**
      * Type of trigger for the breakout room actions.
@@ -29,7 +26,7 @@ type Props = {
     /**
      * React children.
      */
-    children: ReactElement;
+    children: React.ReactNode;
 
     /**
      * Is this item highlighted/raised.
@@ -51,6 +48,8 @@ type Props = {
      */
     participantContextEntity?: {
         jid: string;
+        participantName: string;
+        room: IRoom;
     };
 
     /**
@@ -81,9 +80,9 @@ type Props = {
      * Toggles the room participant context menu.
      */
     toggleParticipantMenu: Function;
-};
+}
 
-const useStyles = makeStyles()((theme: Theme) => {
+const useStyles = makeStyles()(theme => {
     return {
         container: {
             boxShadow: 'none'
@@ -92,9 +91,8 @@ const useStyles = makeStyles()((theme: Theme) => {
         roomName: {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap', // @ts-ignore
-            ...withPixelLineHeight(theme.typography.labelButton),
-            padding: '12px 0'
+            whiteSpace: 'nowrap',
+            ...withPixelLineHeight(theme.typography.bodyLongBold)
         },
 
         arrowContainer: {
@@ -121,7 +119,7 @@ export const CollapsibleRoom = ({
     room,
     searchString,
     toggleParticipantMenu
-}: Props) => {
+}: IProps) => {
     const { t } = useTranslation();
     const { classes: styles, cx } = useStyles();
     const [ collapsed, setCollapsed ] = useState(false);
@@ -131,7 +129,7 @@ export const CollapsibleRoom = ({
     const raiseMenu = useCallback(target => {
         onRaiseMenu(target);
     }, [ onRaiseMenu ]);
-    const { defaultRemoteDisplayName } = useSelector((state: IState) => state['features/base/config']);
+    const { defaultRemoteDisplayName } = useSelector((state: IReduxState) => state['features/base/config']);
     const overflowDrawer: boolean = useSelector(showOverflowDrawer);
     const moderator = useSelector(isLocalParticipantModerator);
 

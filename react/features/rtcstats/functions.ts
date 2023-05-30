@@ -1,24 +1,15 @@
-/* eslint-disable import/order */
 // @ts-ignore
 import { jitsiLocalStorage } from '@jitsi/js-utils';
 
 import { getAmplitudeIdentity } from '../analytics/functions';
-import {
-    getAnalyticsRoomName,
-    getConferenceOptions
-
-    // @ts-ignore
-} from '../base/conference';
-
-// @ts-ignore
-import { getLocalParticipant } from '../base/participants';
-
+import { IStore } from '../app/types';
+import { IStateful } from '../base/app/types';
+import { getAnalyticsRoomName, getConferenceOptions } from '../base/conference/functions';
+import { getLocalParticipant } from '../base/participants/functions';
 import { toState } from '../base/redux/functions';
 
 import RTCStats from './RTCStats';
 import logger from './logger';
-import { IStateful } from '../base/app/types';
-import { IStore } from '../app/types';
 
 /**
  * Checks whether rtcstats is enabled or not.
@@ -77,11 +68,15 @@ export function connectAndSendIdentity({ getState, dispatch }: IStore, identity:
             // This is done in order to facilitate queries based on different conference configurations.
             // e.g. Find all RTCPeerConnections that connect to a specific shard or were created in a
             // conference with a specific version.
-            // XXX(george): we also want to be able to correlate between rtcstats and callstats, so we're
-            // appending the callstats user name (if it exists) to the display name.
-            const displayName = options.statisticsId
-                || options.statisticsDisplayName
-                || jitsiLocalStorage.getItem('callStatsUserName');
+            let displayName = jitsiLocalStorage.getItem('callStatsUserName');
+
+            if (options.statisticsId || options.statisticsDisplayName) {
+                if (options.statisticsId && options.statisticsDisplayName) {
+                    displayName = `${options.statisticsDisplayName} (${options.statisticsId})`;
+                } else {
+                    displayName = options.statisticsId || options.statisticsDisplayName;
+                }
+            }
 
             RTCStats.sendIdentityData({
                 ...getAmplitudeIdentity(),

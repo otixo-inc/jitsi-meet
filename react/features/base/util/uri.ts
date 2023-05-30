@@ -1,7 +1,12 @@
 import { parseURLParams } from './parseURLParams';
-// eslint-disable-next-line lines-around-comment
-// @ts-ignore
 import { normalizeNFKC } from './strings';
+
+/**
+ * Http status codes.
+ */
+export enum StatusCode {
+    PaymentRequired = 402
+}
 
 /**
  * The app linking scheme.
@@ -258,7 +263,6 @@ export function parseStandardURIString(str: string) {
             authority = authority.substring(userinfoEndIndex + 1);
         }
 
-        // @ts-ignore
         obj.host = authority;
 
         // port
@@ -421,7 +425,7 @@ export function safeDecodeURIComponent(text: string) {
  * @returns {string} - A {@code String} representation of the specified
  * {@code obj} which is supposed to represent a URL.
  */
-export function toURLString(obj?: (Object | string)): string | undefined | null {
+export function toURLString(obj?: (Object | string)) {
     let str;
 
     switch (typeof obj) {

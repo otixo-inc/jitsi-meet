@@ -16,6 +16,7 @@
 
 package org.jitsi.meet.sdk;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -31,7 +32,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.facebook.react.modules.core.PermissionListener;
 
-import org.wonday.orientation.OrientationActivityLifecycle;
 import org.jitsi.meet.sdk.log.JitsiMeetLogger;
 
 import java.util.HashMap;
@@ -104,7 +104,6 @@ public class JitsiMeetActivity extends AppCompatActivity
         this.jitsiView = findViewById(R.id.jitsiView);
 
         registerForBroadcastMessages();
-        registerActivityLifecycleCallbacks(OrientationActivityLifecycle.getInstance());
 
         if (!extraInitialize()) {
             initialize();
@@ -179,8 +178,11 @@ public class JitsiMeetActivity extends AppCompatActivity
     }
 
     protected void leave() {
-        Intent hangupBroadcastIntent = BroadcastIntentHelper.buildHangUpIntent();
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(hangupBroadcastIntent);
+        if (this.jitsiView != null) {
+            this.jitsiView.abort();
+        } else {
+            JitsiMeetLogger.w("Cannot leave, view is null");
+        }
     }
 
     private @Nullable
@@ -297,6 +299,7 @@ public class JitsiMeetActivity extends AppCompatActivity
         JitsiMeetActivityDelegate.requestPermissions(this, permissions, requestCode, listener);
     }
 
+    @SuppressLint("MissingSuperCall")
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         JitsiMeetActivityDelegate.onRequestPermissionsResult(requestCode, permissions, grantResults);

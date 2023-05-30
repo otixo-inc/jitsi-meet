@@ -1,9 +1,8 @@
 import { sha512_256 as sha512 } from 'js-sha512';
 import _ from 'lodash';
 
-// @ts-ignore
 import { getName } from '../../app/functions';
-import { IState, IStore } from '../../app/types';
+import { IReduxState, IStore } from '../../app/types';
 import { determineTranscriptionLanguage } from '../../transcribing/functions';
 import { IStateful } from '../app/types';
 import { JitsiTrackErrors } from '../lib-jitsi-meet';
@@ -15,10 +14,12 @@ import {
 } from '../participants/actions';
 import { getLocalParticipant } from '../participants/functions';
 import { toState } from '../redux/functions';
-import { getJitsiMeetGlobalNS } from '../util/helpers';
-import { getBackendSafePath, safeDecodeURIComponent } from '../util/uri';
+import {
+    appendURLParam,
+    getBackendSafePath,
+    safeDecodeURIComponent
+} from '../util/uri';
 
-// @ts-ignore
 import { setObfuscatedRoom } from './actions';
 import {
     AVATAR_URL_COMMAND,
@@ -31,18 +32,18 @@ import { IJitsiConference } from './reducer';
 /**
  * Returns root conference state.
  *
- * @param {IState} state - Global state.
+ * @param {IReduxState} state - Global state.
  * @returns {Object} Conference state.
  */
-export const getConferenceState = (state: IState) => state['features/base/conference'];
+export const getConferenceState = (state: IReduxState) => state['features/base/conference'];
 
 /**
  * Is the conference joined or not.
  *
- * @param {IState} state - Global state.
+ * @param {IReduxState} state - Global state.
  * @returns {boolean}
  */
-export const getIsConferenceJoined = (state: IState) => Boolean(getConferenceState(state).conference);
+export const getIsConferenceJoined = (state: IReduxState) => Boolean(getConferenceState(state).conference);
 
 /**
  * Attach a set of local tracks to a conference.
@@ -86,7 +87,7 @@ export function _addLocalTracksToConference(
  * @returns {void}
  */
 export function commonUserJoinedHandling(
-        { dispatch }: IStore,
+        { dispatch }: { dispatch: IStore['dispatch']; },
         conference: IJitsiConference,
         user: any) {
     const id = user.getId();
@@ -99,13 +100,13 @@ export function commonUserJoinedHandling(
 
         dispatch(participantJoined({
             botType: user.getBotType(),
-            connectionStatus: user.getConnectionStatus(),
             conference,
             id,
             name: displayName,
             presence: user.getStatus(),
             role: user.getRole(),
-            isReplacing
+            isReplacing,
+            sources: user.getSources()
         }));
     }
 }
@@ -122,7 +123,7 @@ export function commonUserJoinedHandling(
  * @returns {void}
  */
 export function commonUserLeftHandling(
-        { dispatch }: IStore,
+        { dispatch }: { dispatch: IStore['dispatch']; },
         conference: IJitsiConference,
         user: any) {
     const id = user.getId();
@@ -158,7 +159,6 @@ export function forEachConference(
         // Does the value of the base/conference's property look like a
         // JitsiConference?
         if (v && typeof v === 'object') {
-            // $FlowFixMe
             const url: URL = v[JITSI_CONFERENCE_URL_KEY];
 
             // XXX The Web version of Jitsi Meet does not utilize
@@ -186,9 +186,10 @@ export function getConferenceName(stateful: IStateful): string {
     const state = toState(stateful);
     const { callee } = state['features/base/jwt'];
     const { callDisplayName } = state['features/base/config'];
-    const { localSubject, room, subject } = getConferenceState(state);
+    const { localSubject, pendingSubjectChange, room, subject } = getConferenceState(state);
 
-    return (localSubject
+    return (pendingSubjectChange
+        || localSubject
         || subject
         || callDisplayName
         || callee?.name
@@ -247,11 +248,101 @@ export function getConferenceOptions(stateful: IStateful) {
         delete config.analytics?.googleAnalyticsTrackingId;
         delete options.callStatsID;
         delete options.callStatsSecret;
-    } else {
-        options.getWiFiStatsMethod = getWiFiStatsMethod;
     }
 
     return options;
+}
+
+/**
+ * Returns the restored conference options if anything is available to be restored or undefined.
+ *
+ * @param {IStateful} stateful - The redux store state.
+ * @returns {Object?}
+ */
+export function restoreConferenceOptions(stateful: IStateful) {
+    const config = toState(stateful)['features/base/config'];
+
+    if (config.oldConfig) {
+        return {
+            hosts: {
+                domain: config.oldConfig.hosts.domain,
+                muc: config.oldConfig.hosts.muc
+            },
+            focusUserJid: config.oldConfig.focusUserJid,
+            disableFocus: false,
+            bosh: config.oldConfig.bosh,
+            websocket: config.oldConfig.websocket,
+            oldConfig: undefined
+        };
+    }
+
+    // nothing to return
+    return;
+}
+
+/**
+ * Override the global config (that is, window.config) with XMPP configuration required to join as a visitor.
+ *
+ * @param {IStateful} stateful - The redux store state.
+ * @param {Array<string>} params - The received parameters.
+ * @returns {Object}
+ */
+export function getVisitorOptions(stateful: IStateful, params: Array<string>) {
+    const [ vnode, focusJid, username ] = params;
+
+    const config = toState(stateful)['features/base/config'];
+
+    if (!config || !config.hosts) {
+        logger.warn('Wrong configuration, missing hosts.');
+
+        return;
+    }
+
+    if (!vnode) {
+        // this is redirecting back to main, lets restore config
+        // no point of updating disableFocus, we can skip the initial iq to jicofo
+        if (config.oldConfig && username) {
+            return {
+                hosts: {
+                    domain: config.oldConfig.hosts.domain,
+                    muc: config.oldConfig.hosts.muc
+                },
+                focusUserJid: focusJid,
+                disableLocalStats: false,
+                bosh: config.oldConfig.bosh && appendURLParam(config.oldConfig.bosh, 'customusername', username),
+                websocket: config.oldConfig.websocket
+                    && appendURLParam(config.oldConfig.websocket, 'customusername', username),
+                oldConfig: undefined // clears it up
+            };
+        }
+
+        return;
+    }
+
+    const oldConfig = {
+        hosts: {
+            domain: config.hosts.domain,
+            muc: config.hosts.muc
+        },
+        focusUserJid: config.focusUserJid,
+        bosh: config.bosh,
+        websocket: config.websocket
+    };
+
+    const domain = `${vnode}.meet.jitsi`;
+
+    return {
+        oldConfig,
+        hosts: {
+            domain,
+            muc: config.hosts.muc.replace(oldConfig.hosts.domain, domain)
+        },
+        focusUserJid: focusJid,
+        disableFocus: true, // This flag disables sending the initial conference request
+        disableLocalStats: true,
+        bosh: config.bosh && appendURLParam(config.bosh, 'vnode', vnode),
+        websocket: config.websocket && appendURLParam(config.websocket, 'vnode', vnode)
+    };
 }
 
 /**
@@ -278,7 +369,7 @@ export function getConferenceTimestamp(stateful: IStateful) {
  * {@code getState} function.
  * @returns {JitsiConference|undefined}
  */
-export function getCurrentConference(stateful: IStateful): any {
+export function getCurrentConference(stateful: IStateful): IJitsiConference | undefined {
     const { conference, joining, leaving, membersOnly, passwordRequired }
         = getConferenceState(toState(stateful));
 
@@ -293,21 +384,21 @@ export function getCurrentConference(stateful: IStateful): any {
 /**
  * Returns the stored room name.
  *
- * @param {IState} state - The current state of the app.
+ * @param {IReduxState} state - The current state of the app.
  * @returns {string}
  */
-export function getRoomName(state: IState) {
+export function getRoomName(state: IReduxState) {
     return getConferenceState(state).room;
 }
 
 /**
  * Get an obfuscated room name or create and persist it if it doesn't exists.
  *
- * @param {IState} state - The current state of the app.
+ * @param {IReduxState} state - The current state of the app.
  * @param {Function} dispatch - The Redux dispatch function.
  * @returns {string} - Obfuscated room name.
  */
-export function getOrCreateObfuscatedRoomName(state: IState, dispatch: IStore['dispatch']) {
+export function getOrCreateObfuscatedRoomName(state: IReduxState, dispatch: IStore['dispatch']) {
     let { obfuscatedRoom } = getConferenceState(state);
     const { obfuscatedRoomSource } = getConferenceState(state);
     const room = getRoomName(state);
@@ -331,11 +422,11 @@ export function getOrCreateObfuscatedRoomName(state: IState, dispatch: IStore['d
  * Analytics may require an obfuscated room name, this functions decides based on a config if the normal or
  * obfuscated room name should be returned.
  *
- * @param {IState} state - The current state of the app.
+ * @param {IReduxState} state - The current state of the app.
  * @param {Function} dispatch - The Redux dispatch function.
  * @returns {string} - Analytics room name.
  */
-export function getAnalyticsRoomName(state: IState, dispatch: IStore['dispatch']) {
+export function getAnalyticsRoomName(state: IReduxState, dispatch: IStore['dispatch']) {
     const { analysis: { obfuscateRoomName = false } = {} } = state['features/base/config'];
 
     if (obfuscateRoomName) {
@@ -343,21 +434,6 @@ export function getAnalyticsRoomName(state: IState, dispatch: IStore['dispatch']
     }
 
     return getRoomName(state);
-}
-
-/**
- * Returns the result of getWiFiStats from the global NS or does nothing
- * (returns empty result).
- * Fixes a concurrency problem where we need to pass a function when creating
- * a JitsiConference, but that method is added to the context later.
- *
- * @returns {Promise}
- * @private
- */
-function getWiFiStatsMethod() {
-    const gloabalNS = getJitsiMeetGlobalNS();
-
-    return gloabalNS.getWiFiStats ? gloabalNS.getWiFiStats() : Promise.resolve('{}');
 }
 
 /**
@@ -448,7 +524,7 @@ function _reportError(msg: string, err: Error) {
  */
 export function sendLocalParticipant(
         stateful: IStateful,
-        conference: IJitsiConference) {
+        conference?: IJitsiConference) {
     const {
         avatarURL,
         email,
@@ -456,18 +532,18 @@ export function sendLocalParticipant(
         name
     } = getLocalParticipant(stateful) ?? {};
 
-    avatarURL && conference.sendCommand(AVATAR_URL_COMMAND, {
+    avatarURL && conference?.sendCommand(AVATAR_URL_COMMAND, {
         value: avatarURL
     });
-    email && conference.sendCommand(EMAIL_COMMAND, {
+    email && conference?.sendCommand(EMAIL_COMMAND, {
         value: email
     });
 
     if (features && features['screen-sharing'] === 'true') {
-        conference.setLocalParticipantProperty('features_screen-sharing', true);
+        conference?.setLocalParticipantProperty('features_screen-sharing', true);
     }
 
-    conference.setDisplayName(name);
+    conference?.setDisplayName(name);
 }
 
 /**

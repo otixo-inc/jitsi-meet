@@ -1,30 +1,24 @@
-/* eslint-disable lines-around-comment */
-import { Theme } from '@mui/material';
 import React, { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
-// @ts-ignore
-import { Avatar } from '../../../../../base/avatar';
-// @ts-ignore
-import { ContextMenu, ContextMenuItemGroup } from '../../../../../base/components';
+import Avatar from '../../../../../base/avatar/components/Avatar';
 import { isLocalParticipantModerator } from '../../../../../base/participants/functions';
-// @ts-ignore
+import ContextMenu from '../../../../../base/ui/components/web/ContextMenu';
+import ContextMenuItemGroup from '../../../../../base/ui/components/web/ContextMenuItemGroup';
 import { getBreakoutRooms } from '../../../../../breakout-rooms/functions';
-// @ts-ignore
 import { showOverflowDrawer } from '../../../../../toolbox/functions.web';
-// @ts-ignore
 import SendToRoomButton from '../../../../../video-menu/components/web/SendToRoomButton';
 import { AVATAR_SIZE } from '../../../../constants';
 
 
-type Props = {
+interface IProps {
 
     /**
      * Room and participant jid reference.
      */
-    entity: {
+    entity?: {
         jid: string;
         participantName: string;
         room: any;
@@ -33,25 +27,25 @@ type Props = {
     /**
      * Target elements against which positioning calculations are made.
      */
-    offsetTarget: HTMLElement | undefined;
+    offsetTarget?: HTMLElement | null;
 
     /**
      * Callback for the mouse entering the component.
      */
-    onEnter: Function;
+    onEnter: () => void;
 
     /**
      * Callback for the mouse leaving the component.
      */
-    onLeave: Function;
+    onLeave: () => void;
 
     /**
      * Callback for making a selection in the menu.
      */
-    onSelect: Function;
-};
+    onSelect: (force?: any) => void;
+}
 
-const useStyles = makeStyles()((theme: Theme) => {
+const useStyles = makeStyles()(theme => {
     return {
         text: {
             color: theme.palette.text02,
@@ -71,7 +65,7 @@ export const RoomParticipantContextMenu = ({
     onEnter,
     onLeave,
     onSelect
-}: Props) => {
+}: IProps) => {
     const { classes: styles } = useStyles();
     const { t } = useTranslation();
     const isLocalModerator = useSelector(isLocalParticipantModerator);
@@ -84,15 +78,15 @@ export const RoomParticipantContextMenu = ({
             return (<SendToRoomButton
                 key = { room.id }
                 onClick = { lowerMenu }
-                participantID = { entity?.jid }
+                participantID = { entity?.jid ?? '' }
                 room = { room } />);
         }
 
         return null;
     })
-.filter(Boolean), [ entity, rooms ]);
+    .filter(Boolean), [ entity, rooms ]);
 
-    return isLocalModerator && (
+    return isLocalModerator ? (
         <ContextMenu
             entity = { entity }
             isDrawerOpen = { Boolean(entity) }
@@ -116,5 +110,5 @@ export const RoomParticipantContextMenu = ({
                 {breakoutRoomsButtons}
             </ContextMenuItemGroup>
         </ContextMenu>
-    );
+    ) : null;
 };

@@ -1,25 +1,30 @@
-export interface Participant {
+export enum FakeParticipant {
+    LocalScreenShare = 'LocalScreenShare',
+    RemoteScreenShare = 'RemoteScreenShare',
+    SharedVideo = 'SharedVideo',
+    Whiteboard = 'Whiteboard'
+}
+
+export interface IParticipant {
     avatarURL?: string;
     botType?: string;
     conference?: Object;
-    connectionStatus?: string;
     displayName?: string;
     dominantSpeaker?: boolean;
     e2eeEnabled?: boolean;
     e2eeSupported?: boolean;
+    e2eeVerificationAvailable?: boolean;
+    e2eeVerified?: boolean;
     email?: string;
+    fakeParticipant?: FakeParticipant;
     features?: {
         'screen-sharing'?: boolean | string;
     };
     getId?: Function;
     id: string;
-    isFakeParticipant?: boolean;
     isJigasi?: boolean;
-    isLocalScreenShare?: boolean;
     isReplaced?: boolean;
     isReplacing?: number;
-    isVirtualScreenshareParticipant?: boolean;
-    isWhiteboard?: boolean;
     jwtId?: string;
     loadableAvatarUrl?: string;
     loadableAvatarUrlUseCORS?: boolean;
@@ -32,10 +37,11 @@ export interface Participant {
     region?: string;
     remoteControlSessionStatus?: boolean;
     role?: string;
+    sources?: Map<string, Map<string, ISourceInfo>>;
     supportsRemoteControl?: boolean;
 }
 
-export interface LocalParticipant extends Participant {
+export interface ILocalParticipant extends IParticipant {
     audioOutputDeviceId?: string;
     cameraDeviceId?: string;
     jwtId?: string;
@@ -46,6 +52,16 @@ export interface LocalParticipant extends Participant {
     userSelectedMicDeviceLabel?: string;
 }
 
+export interface ISourceInfo {
+    muted: boolean;
+    videoType: string;
+}
+
 export interface IJitsiParticipant {
+    getDisplayName: () => string;
     getId: () => string;
+    getJid: () => string;
+    getRole: () => string;
+    getSources: () => Map<string, Map<string, ISourceInfo>>;
+    isHidden: () => boolean;
 }

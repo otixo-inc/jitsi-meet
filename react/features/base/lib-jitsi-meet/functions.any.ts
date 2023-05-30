@@ -4,6 +4,7 @@ import { toState } from '../redux/functions';
 // @ts-ignore
 import JitsiMeetJS from './_';
 
+
 const JitsiConferenceErrors = JitsiMeetJS.errors.conference;
 const JitsiConnectionErrors = JitsiMeetJS.errors.connection;
 
@@ -18,7 +19,8 @@ const JitsiConnectionErrors = JitsiMeetJS.errors.connection;
  *
  * @returns {Promise<JitsiLocalTrack>}
  */
-export function createLocalTrack(type: string, deviceId: string, timeout?: number, additionalOptions?: Object) {
+export function createLocalTrack(type: string, deviceId: string | null, timeout?: number | null,
+        additionalOptions?: Object) {
     return (
         JitsiMeetJS.createLocalTracks({
             cameraDeviceId: deviceId,

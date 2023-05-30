@@ -1,26 +1,20 @@
-/* eslint-disable lines-around-comment */
-
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 
-// @ts-ignore
 import TogglePinToStageButton from '../../../../features/video-menu/components/web/TogglePinToStageButton';
-// @ts-ignore
-import { Avatar } from '../../../base/avatar';
-import ContextMenu from '../../../base/components/context-menu/ContextMenu';
-import ContextMenuItemGroup from '../../../base/components/context-menu/ContextMenuItemGroup';
-import { IconShareVideo } from '../../../base/icons/svg';
-import { Participant } from '../../../base/participants/types';
-// @ts-ignore
+import Avatar from '../../../base/avatar/components/Avatar';
+import { IconPlay } from '../../../base/icons/svg';
+import { isWhiteboardParticipant } from '../../../base/participants/functions';
+import { IParticipant } from '../../../base/participants/types';
+import ContextMenu from '../../../base/ui/components/web/ContextMenu';
+import ContextMenuItemGroup from '../../../base/ui/components/web/ContextMenuItemGroup';
 import { stopSharedVideo } from '../../../shared-video/actions.any';
-// @ts-ignore
 import { showOverflowDrawer } from '../../../toolbox/functions.web';
-// @ts-ignore
 import { setWhiteboardOpen } from '../../../whiteboard/actions';
 import { WHITEBOARD_ID } from '../../../whiteboard/constants';
 
-type Props = {
+interface IProps {
 
     /**
      * Class name for the context menu.
@@ -69,13 +63,13 @@ type Props = {
     /**
      * Participant reference.
      */
-    participant: Participant;
+    participant: IParticipant;
 
     /**
      * Whether or not the menu is displayed in the thumbnail remote video menu.
      */
     thumbnailMenu?: boolean;
-};
+}
 
 const FakeParticipantContextMenu = ({
     className,
@@ -88,7 +82,7 @@ const FakeParticipantContextMenu = ({
     onSelect,
     participant,
     thumbnailMenu
-}: Props) => {
+}: IProps) => {
     const dispatch = useDispatch();
     const { t } = useTranslation();
     const _overflowDrawer: boolean = useSelector(showOverflowDrawer);
@@ -106,10 +100,10 @@ const FakeParticipantContextMenu = ({
     }, [ setWhiteboardOpen ]);
 
     const _getActions = useCallback(() => {
-        if (participant.isWhiteboard) {
+        if (isWhiteboardParticipant(participant)) {
             return [ {
                 accessibilityLabel: t('toolbar.hideWhiteboard'),
-                icon: IconShareVideo,
+                icon: IconPlay,
                 onClick: _onHideWhiteboard,
                 text: t('toolbar.hideWhiteboard')
             } ];
@@ -118,12 +112,12 @@ const FakeParticipantContextMenu = ({
         if (localVideoOwner) {
             return [ {
                 accessibilityLabel: t('toolbar.stopSharedVideo'),
-                icon: IconShareVideo,
+                icon: IconPlay,
                 onClick: _onStopSharedVideo,
                 text: t('toolbar.stopSharedVideo')
             } ];
         }
-    }, [ localVideoOwner, participant.isWhiteboard ]);
+    }, [ localVideoOwner, participant.fakeParticipant ]);
 
     return (
         <ContextMenu
@@ -148,9 +142,11 @@ const FakeParticipantContextMenu = ({
 
             <ContextMenuItemGroup
                 actions = { _getActions() }>
-                {participant.isWhiteboard && <TogglePinToStageButton
-                    key = 'pinToStage'
-                    participantID = { WHITEBOARD_ID } />}
+                {isWhiteboardParticipant(participant) && (
+                    <TogglePinToStageButton
+                        key = 'pinToStage'
+                        participantID = { WHITEBOARD_ID } />
+                )}
             </ContextMenuItemGroup>
 
         </ContextMenu>

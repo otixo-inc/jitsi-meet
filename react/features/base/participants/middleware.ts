@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { batch } from 'react-redux';
 
-// @ts-ignore
+// @ts-expect-error
 import UIEvents from '../../../../service/UI/UIEvents';
 import { IStore } from '../../app/types';
 import { approveParticipant } from '../../av-moderation/actions';
@@ -74,7 +74,9 @@ import {
     getRaiseHandsQueue,
     getRemoteParticipants,
     hasRaisedHand,
-    isLocalParticipantModerator
+    isLocalParticipantModerator,
+    isScreenShareParticipant,
+    isWhiteboardParticipant
 } from './functions';
 import logger from './logger';
 import { PARTICIPANT_JOINED_FILE, PARTICIPANT_LEFT_FILE } from './sounds';
@@ -267,19 +269,19 @@ MiddlewareRegistry.register(store => next => action => {
     }
 
     case PARTICIPANT_JOINED: {
-        const { isVirtualScreenshareParticipant, isWhiteboard } = action.participant;
-
-        // Do not play sounds when a virtual participant tile is created for screenshare.
-        (!isVirtualScreenshareParticipant && !isWhiteboard) && _maybePlaySounds(store, action);
+        // Do not play sounds when a screenshare or whiteboard participant tile is created for screenshare.
+        (!isScreenShareParticipant(action.participant)
+            && !isWhiteboardParticipant(action.participant)
+        ) && _maybePlaySounds(store, action);
 
         return _participantJoinedOrUpdated(store, next, action);
     }
 
     case PARTICIPANT_LEFT: {
-        const { isVirtualScreenshareParticipant, isWhiteboard } = action.participant;
-
-        // Do not play sounds when a tile for screenshare is removed.
-        (!isVirtualScreenshareParticipant && !isWhiteboard) && _maybePlaySounds(store, action);
+        // Do not play sounds when a tile for screenshare or whiteboard is removed.
+        (!isScreenShareParticipant(action.participant)
+            && !isWhiteboardParticipant(action.participant)
+        ) && _maybePlaySounds(store, action);
 
         break;
     }
@@ -427,11 +429,12 @@ StateListenerRegistry.register(
                 'e2ee.enabled': (participant: IJitsiParticipant, value: string) =>
                     _e2eeUpdated(store, conference, participant.getId(), value),
                 'features_e2ee': (participant: IJitsiParticipant, value: boolean) =>
-                    store.dispatch(participantUpdated({
-                        conference,
-                        id: participant.getId(),
-                        e2eeSupported: value
-                    })),
+                    getParticipantById(store.getState(), participant.getId())?.e2eeSupported !== value
+                        && store.dispatch(participantUpdated({
+                            conference,
+                            id: participant.getId(),
+                            e2eeSupported: value
+                        })),
                 'features_jigasi': (participant: IJitsiParticipant, value: boolean) =>
                     store.dispatch(participantUpdated({
                         conference,
@@ -504,7 +507,12 @@ StateListenerRegistry.register(
 function _e2eeUpdated({ getState, dispatch }: IStore, conference: IJitsiConference,
         participantId: string, newValue: string | boolean) {
     const e2eeEnabled = newValue === 'true';
-    const { e2ee = {} } = getState()['features/base/config'];
+    const state = getState();
+    const { e2ee = {} } = state['features/base/config'];
+
+    if (e2eeEnabled === getParticipantById(state, participantId)?.e2eeEnabled) {
+        return;
+    }
 
     dispatch(participantUpdated({
         conference,
@@ -540,11 +548,11 @@ function _localParticipantJoined({ getState, dispatch }: IStore, next: Function,
 
     const settings = getState()['features/base/settings'];
 
-    // @ts-ignore
     dispatch(localParticipantJoined({
         avatarURL: settings.avatarURL,
         email: settings.email,
-        name: settings.displayName
+        name: settings.displayName,
+        id: ''
     }));
 
     return result;
@@ -639,7 +647,6 @@ function _participantJoinedOrUpdated(store: IStore, next: Function, action: any)
     // Send an external update of the local participant's raised hand state
     // if a new raised hand state is defined in the action.
     if (typeof raisedHandTimestamp !== 'undefined') {
-
         if (local) {
             const { conference } = getState()['features/base/conference'];
             const rHand = parseInt(raisedHandTimestamp, 10);
@@ -687,14 +694,6 @@ function _participantJoinedOrUpdated(store: IStore, next: Function, action: any)
                     dispatch(setLoadableAvatarUrl(participantId, urlData?.src ?? '', Boolean(urlData?.isUsingCORS)));
                 });
         }
-    }
-
-    // Notify external listeners of potential avatarURL changes.
-    if (typeof APP === 'object') {
-        const currentKnownId = local ? APP.conference.getMyUserId() : id;
-
-        // Force update of local video getting a new id.
-        APP.UI.refreshAvatarDisplay(currentKnownId);
     }
 
     return result;

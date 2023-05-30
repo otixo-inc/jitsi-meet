@@ -2,16 +2,16 @@
 
 import Logger from '@jitsi/logger';
 
-import { getMultipleVideoSupportFeatureFlag } from '../../../react/features/base/config';
-import { MEDIA_TYPE, VIDEO_TYPE } from '../../../react/features/base/media';
+import { MEDIA_TYPE, VIDEO_TYPE } from '../../../react/features/base/media/constants';
 import {
     getParticipantById,
-    getPinnedParticipant
-} from '../../../react/features/base/participants';
+    getPinnedParticipant,
+    isScreenShareParticipantById
+} from '../../../react/features/base/participants/functions';
 import {
     getTrackByMediaTypeAndParticipant,
-    getVirtualScreenshareParticipantTrack
-} from '../../../react/features/base/tracks';
+    getVideoTrackByParticipant
+} from '../../../react/features/base/tracks/functions.any';
 
 import LargeVideoManager from './LargeVideoManager';
 import { VIDEO_CONTAINER_TYPE } from './VideoContainer';
@@ -90,12 +90,13 @@ const VideoLayout = {
     getRemoteVideoType(id) {
         const state = APP.store.getState();
         const participant = getParticipantById(state, id);
+        const isScreenShare = isScreenShareParticipantById(state, id);
 
-        if (participant?.isFakeParticipant) {
+        if (participant?.fakeParticipant && !isScreenShare) {
             return VIDEO_TYPE.CAMERA;
         }
 
-        if (getMultipleVideoSupportFeatureFlag(state) && participant?.isVirtualScreenshareParticipant) {
+        if (isScreenShare) {
             return VIDEO_TYPE.DESKTOP;
         }
 
@@ -108,23 +109,6 @@ const VideoLayout = {
         const { id } = getPinnedParticipant(APP.store.getState()) || {};
 
         return id || null;
-    },
-
-    /**
-     * Shows/hides warning about a user's connectivity issues.
-     *
-     * @param {string} id - The ID of the remote participant(MUC nickname).
-     * @returns {void}
-     */
-    onParticipantConnectionStatusChanged(id) {
-        if (APP.conference.isLocalId(id)) {
-
-            return;
-        }
-
-        // We have to trigger full large video update to transition from
-        // avatar to video on connectivity restored.
-        this._updateLargeVideoIfDisplayed(id, true);
     },
 
     /**
@@ -155,12 +139,6 @@ const VideoLayout = {
         }
     },
 
-    changeUserAvatar(id, avatarUrl) {
-        if (this.isCurrentlyOnLarge(id)) {
-            largeVideo.updateAvatar(avatarUrl);
-        }
-    },
-
     isLargeVideoVisible() {
         return this.isLargeContainerTypeVisible(VIDEO_CONTAINER_TYPE);
     },
@@ -186,16 +164,7 @@ const VideoLayout = {
         const isOnLarge = this.isCurrentlyOnLarge(id);
         const state = APP.store.getState();
         const participant = getParticipantById(state, id);
-        const tracks = state['features/base/tracks'];
-
-        let videoTrack;
-
-        if (getMultipleVideoSupportFeatureFlag(state) && participant?.isVirtualScreenshareParticipant) {
-            videoTrack = getVirtualScreenshareParticipantTrack(tracks, id);
-        } else {
-            videoTrack = getTrackByMediaTypeAndParticipant(tracks, MEDIA_TYPE.VIDEO, id);
-        }
-
+        const videoTrack = getVideoTrackByParticipant(state, participant);
         const videoStream = videoTrack?.jitsiTrack;
 
         if (videoStream && forceStreamToReattach) {

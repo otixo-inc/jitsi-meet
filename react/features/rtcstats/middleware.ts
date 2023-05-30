@@ -1,4 +1,3 @@
-/* eslint-disable lines-around-comment */
 import { AnyAction } from 'redux';
 
 import { IStore } from '../app/types';
@@ -8,16 +7,15 @@ import {
     CONFERENCE_UNIQUE_ID_SET,
     CONFERENCE_WILL_LEAVE,
     E2E_RTT_CHANGED
-    // @ts-ignore
-} from '../base/conference';
+} from '../base/conference/actionTypes';
 import { LIB_WILL_INIT } from '../base/lib-jitsi-meet/actionTypes';
 import { DOMINANT_SPEAKER_CHANGED } from '../base/participants/actionTypes';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
 import { TRACK_ADDED, TRACK_UPDATED } from '../base/tracks/actionTypes';
 import { getCurrentRoomId, isInBreakoutRoom } from '../breakout-rooms/functions';
-// @ts-ignore
 import { extractFqnFromPath } from '../dynamic-branding/functions.any';
-import { ADD_FACE_EXPRESSION, FACE_LANDMARK_DETECTION_STOPPED } from '../face-landmarks/actionTypes';
+import { ADD_FACE_LANDMARKS } from '../face-landmarks/actionTypes';
+import { FaceLandmarks } from '../face-landmarks/types';
 
 import RTCStats from './RTCStats';
 import {
@@ -43,7 +41,7 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => (action: AnyA
 
     switch (action.type) {
     case LIB_WILL_INIT: {
-        if (isRtcstatsEnabled(state) && !RTCStats.isInitialized()) {
+        if (isRtcstatsEnabled(state)) {
             // RTCStats "proxies" WebRTC functions such as GUM and RTCPeerConnection by rewriting the global
             // window functions. Because lib-jitsi-meet uses references to those functions that are taken on
             // init, we need to add these proxies before it initializes, otherwise lib-jitsi-meet will use the
@@ -56,7 +54,8 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => (action: AnyA
 
                 // Initialize but don't connect to the rtcstats server wss, as it will start sending data for all
                 // media calls made even before the conference started.
-                RTCStats.init({
+
+                RTCStats.maybeInit({
                     endpoint: analytics?.rtcstatsEndpoint,
                     meetingFqn: extractFqnFromPath(state),
                     useLegacy,
@@ -66,6 +65,8 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => (action: AnyA
             } catch (error) {
                 logger.error('Failed to initialize RTCStats: ', error);
             }
+        } else {
+            RTCStats.reset();
         }
         break;
     }
@@ -121,8 +122,16 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => (action: AnyA
     }
     case TRACK_UPDATED: {
         if (canSendRtcstatsData(state)) {
-            const { videoType, jitsiTrack } = action?.track || { };
-            const { ssrc } = jitsiTrack || { };
+            const { videoType, jitsiTrack, muted } = action?.track || { };
+            const { ssrc, isLocal, videoType: trackVideoType, conference } = jitsiTrack || { };
+
+            if (trackVideoType === 'camera' && conference && isLocal()) {
+                RTCStats.sendFaceLandmarksData({
+                    duration: 0,
+                    faceLandmarks: muted ? 'camera-off' : 'camera-on',
+                    timestamp: Date.now()
+                });
+            }
 
             // if the videoType of the remote track has changed we expect to find it in track.videoType. grep for
             // trackVideoTypeChanged.
@@ -159,14 +168,14 @@ MiddlewareRegistry.register((store: IStore) => (next: Function) => (action: AnyA
         }
         break;
     }
-    case ADD_FACE_EXPRESSION:
-    case FACE_LANDMARK_DETECTION_STOPPED: {
+    case ADD_FACE_LANDMARKS: {
         if (canSendFaceLandmarksRtcstatsData(state)) {
-            const { duration, faceExpression, timestamp } = action;
+            const { duration, faceExpression, timestamp } = action.faceLandmarks as FaceLandmarks;
+            const durationSeconds = Math.round(duration / 1000);
 
             RTCStats.sendFaceLandmarksData({
-                duration: duration ?? 0,
-                faceLandmarks: faceExpression ?? 'detection-off',
+                duration: durationSeconds,
+                faceLandmarks: faceExpression,
                 timestamp
             });
         }

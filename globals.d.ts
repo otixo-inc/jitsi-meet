@@ -9,12 +9,31 @@ declare global {
         UI: any;
         API: any;
         conference: any;
+        debugLogs: any;
     };
     const interfaceConfig: any;
 
     interface Window {
-        config?: IConfig;
+        config: IConfig;
         JITSI_MEET_LITE_SDK?: boolean;
         interfaceConfig?: any;
+        JitsiMeetJS?: any;
+        JitsiMeetElectron?: any;
+        // selenium tests handler
+        _sharedVideoPlayer: any;
+    }
+
+    interface Document {
+        mozCancelFullScreen?: Function;
+        webkitExitFullscreen?: Function;
+    }
+
+    const config: IConfig;
+
+    const JitsiMeetJS: any;
+
+    interface HTMLMediaElement {
+        setSinkId: (id: string) => Promise<undefined>;
+        stop: () => void;
     }
 }

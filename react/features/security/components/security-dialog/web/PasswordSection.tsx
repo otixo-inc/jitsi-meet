@@ -3,22 +3,22 @@ import React, { useRef, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
 
 import { translate } from '../../../../base/i18n/functions';
-import { copyText } from '../../../../base/util/copyText';
+import { copyText } from '../../../../base/util/copyText.web';
 import { LOCKED_LOCALLY } from '../../../../room-lock/constants';
 import { NOTIFY_CLICK_MODE } from '../../../../toolbox/constants';
 
 import PasswordForm from './PasswordForm';
-import { NotifyClick } from './SecurityDialog';
+import { INotifyClick } from './SecurityDialog';
 
 const DIGITS_ONLY = /^\d+$/;
 const KEY = 'add-passcode';
 
-interface Props extends WithTranslation {
+interface IProps extends WithTranslation {
 
     /**
      * Toolbar buttons which have their click exposed through the API.
      */
-    buttonsWithNotifyClick: Array<string | NotifyClick>;
+    buttonsWithNotifyClick: Array<string | INotifyClick>;
 
     /**
      * Whether or not the current user can modify the current password.
@@ -35,12 +35,12 @@ interface Props extends WithTranslation {
      * The value for how the conference is locked (or undefined if not locked)
      * as defined by room-lock constants.
      */
-    locked: string;
+    locked?: string;
 
     /**
      * The current known password for the JitsiConference.
      */
-    password: string;
+    password?: string;
 
     /**
      * Whether or not to show the password in editing mode.
@@ -63,8 +63,6 @@ interface Props extends WithTranslation {
     setPasswordEditEnabled: Function;
 }
 
-declare let APP: any;
-
 /**
  * Component that handles the password manipulation from the invite dialog.
  *
@@ -80,7 +78,7 @@ function PasswordSection({
     passwordNumberOfDigits,
     setPassword,
     setPasswordEditEnabled,
-    t }: Props) {
+    t }: IProps) {
 
     const formRef = useRef<HTMLDivElement>(null);
     const [ passwordVisible, setPasswordVisible ] = useState(false);
@@ -117,7 +115,7 @@ function PasswordSection({
 
         let notifyMode;
         const notify = buttonsWithNotifyClick.find(
-            (btn: string | NotifyClick) =>
+            (btn: string | INotifyClick) =>
                 (typeof btn === 'string' && btn === KEY)
                 || (typeof btn === 'object' && btn.key === KEY)
         );
@@ -167,7 +165,7 @@ function PasswordSection({
      * @returns {void}
      */
     function onPasswordCopy() {
-        copyText(password);
+        copyText(password ?? '');
     }
 
     /**

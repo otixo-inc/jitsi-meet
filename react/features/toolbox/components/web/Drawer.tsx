@@ -1,21 +1,26 @@
-import { Theme } from '@mui/material';
-import React, { ReactElement, useCallback } from 'react';
+import React, { KeyboardEvent, ReactNode, useCallback } from 'react';
+import ReactFocusLock from 'react-focus-lock';
 import { makeStyles } from 'tss-react/mui';
 
 import { DRAWER_MAX_HEIGHT } from '../../constants';
 
 
-type Props = {
+interface IProps {
 
     /**
      * The component(s) to be displayed within the drawer menu.
      */
-    children: ReactElement;
+    children: ReactNode;
 
     /**
      * Class name for custom styles.
      */
     className?: string;
+
+    /**
+     * The id of the dom element acting as the Drawer label.
+     */
+    headingId?: string;
 
     /**
      * Whether the drawer should be shown or not.
@@ -25,14 +30,15 @@ type Props = {
     /**
      * Function that hides the drawer.
      */
-    onClose: Function;
-};
+    onClose?: Function;
+}
 
-const useStyles = makeStyles()((theme: Theme) => {
+const useStyles = makeStyles()(theme => {
     return {
         drawer: {
-            backgroundColor: theme.palette.ui02,
-            maxHeight: `calc(${DRAWER_MAX_HEIGHT})`
+            backgroundColor: theme.palette.ui01,
+            maxHeight: `calc(${DRAWER_MAX_HEIGHT})`,
+            borderRadius: '24px 24px 0 0'
         }
     };
 });
@@ -45,9 +51,10 @@ const useStyles = makeStyles()((theme: Theme) => {
 function Drawer({
     children,
     className = '',
+    headingId,
     isOpen,
     onClose
-}: Props) {
+}: IProps) {
     const { classes: styles } = useStyles();
 
     /**
@@ -68,18 +75,41 @@ function Drawer({
      */
     const handleOutsideClick = useCallback(event => {
         event.stopPropagation();
-        onClose();
+        onClose?.();
+    }, [ onClose ]);
+
+    /**
+     * Handles pressing the escape key, closing the drawer.
+     *
+     * @param {KeyboardEvent<HTMLDivElement>} event - The keydown event.
+     * @returns {void}
+     */
+    const handleEscKey = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            event.stopPropagation();
+            onClose?.();
+        }
     }, [ onClose ]);
 
     return (
         isOpen ? (
             <div
                 className = 'drawer-menu-container'
-                onClick = { handleOutsideClick }>
+                onClick = { handleOutsideClick }
+                onKeyDown = { handleEscKey }>
                 <div
                     className = { `drawer-menu ${styles.drawer} ${className}` }
                     onClick = { handleInsideClick }>
-                    {children}
+                    <ReactFocusLock
+                        lockProps = {{
+                            role: 'dialog',
+                            'aria-modal': true,
+                            'aria-labelledby': `#${headingId}`
+                        }}
+                        returnFocus = { true }>
+                        {children}
+                    </ReactFocusLock>
                 </div>
             </div>
         ) : null
