@@ -5,16 +5,17 @@ import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../../app/types';
 import DeviceStatus from '../../../../prejoin/components/web/preview/DeviceStatus';
+import { isRoomNameEnabled } from '../../../../prejoin/functions';
 import Toolbox from '../../../../toolbox/components/web/Toolbox';
+import { isButtonEnabled } from '../../../../toolbox/functions.web';
 import { getConferenceName } from '../../../conference/functions';
 import { PREMEETING_BUTTONS, THIRD_PARTY_PREJOIN_BUTTONS } from '../../../config/constants';
-import { getToolbarButtons, isToolbarButtonEnabled } from '../../../config/functions.web';
 import { withPixelLineHeight } from '../../../styles/functions.web';
 
 import ConnectionStatus from './ConnectionStatus';
-// eslint-disable-next-line lines-around-comment
-// @ts-ignore
 import Preview from './Preview';
+import RecordingWarning from './RecordingWarning';
+import UnsafeRoomWarning from './UnsafeRoomWarning';
 
 interface IProps {
 
@@ -57,6 +58,16 @@ interface IProps {
      * Indicates whether the device status should be shown.
      */
     showDeviceStatus: boolean;
+
+    /**
+     * Indicates whether to display the recording warning.
+     */
+    showRecordingWarning?: boolean;
+
+    /**
+     * If should show unsafe room warning when joining.
+     */
+    showUnsafeRoomWarning?: boolean;
 
     /**
      * The 'Skip prejoin' button to be rendered (if any).
@@ -163,6 +174,8 @@ const PreMeetingScreen = ({
     children,
     className,
     showDeviceStatus,
+    showRecordingWarning,
+    showUnsafeRoomWarning,
     skipPrejoinButton,
     title,
     videoMuted,
@@ -193,7 +206,9 @@ const PreMeetingScreen = ({
                         {children}
                         {_buttons.length && <Toolbox toolbarButtons = { _buttons } />}
                         {skipPrejoinButton}
+                        {showUnsafeRoomWarning && <UnsafeRoomWarning />}
                         {showDeviceStatus && <DeviceStatus />}
+                        {showRecordingWarning && <RecordingWarning />}
                     </div>
                 </div>
             </div>
@@ -213,8 +228,8 @@ const PreMeetingScreen = ({
  * @returns {Object}
  */
 function mapStateToProps(state: IReduxState, ownProps: Partial<IProps>) {
-    const { hiddenPremeetingButtons, hideConferenceSubject } = state['features/base/config'];
-    const toolbarButtons = getToolbarButtons(state);
+    const { hiddenPremeetingButtons } = state['features/base/config'];
+    const { toolbarButtons } = state['features/toolbox'];
     const premeetingButtons = (ownProps.thirdParty
         ? THIRD_PARTY_PREJOIN_BUTTONS
         : PREMEETING_BUTTONS).filter((b: any) => !(hiddenPremeetingButtons || []).includes(b));
@@ -229,9 +244,9 @@ function mapStateToProps(state: IReduxState, ownProps: Partial<IProps>) {
         // toolbarButtons config overwrite.
         _buttons: hiddenPremeetingButtons
             ? premeetingButtons
-            : premeetingButtons.filter(b => isToolbarButtonEnabled(b, toolbarButtons)),
+            : premeetingButtons.filter(b => isButtonEnabled(b, toolbarButtons)),
         _premeetingBackground: premeetingBackground,
-        _roomName: (hideConferenceSubject ? undefined : getConferenceName(state)) ?? ''
+        _roomName: isRoomNameEnabled(state) ? getConferenceName(state) : ''
     };
 }
 

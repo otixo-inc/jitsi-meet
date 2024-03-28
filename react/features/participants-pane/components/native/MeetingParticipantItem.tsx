@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 
-import { IReduxState } from '../../../app/types';
+import { IReduxState, IStore } from '../../../app/types';
 import { translate } from '../../../base/i18n/functions';
 import {
     getLocalParticipant,
@@ -15,7 +15,7 @@ import {
     isParticipantAudioMuted,
     isParticipantVideoMuted
 } from '../../../base/tracks/functions.native';
-import { showConnectionStatus, showContextMenuDetails, showSharedVideoMenu } from '../../actions.native';
+import { showContextMenuDetails, showSharedVideoMenu } from '../../actions.native';
 import type { MediaState } from '../../constants';
 import { getParticipantAudioMediaState, getParticipantVideoMediaState } from '../../functions';
 
@@ -76,7 +76,7 @@ interface IProps {
     /**
      * The redux dispatch function.
      */
-    dispatch: Function;
+    dispatch: IStore['dispatch'];
 
     /**
      * The participant.
@@ -117,11 +117,7 @@ class MeetingParticipantItem extends PureComponent<IProps> {
         if (_fakeParticipant && _localVideoOwner) {
             dispatch(showSharedVideoMenu(_participantID));
         } else if (!_fakeParticipant) {
-            if (_local) {
-                dispatch(showConnectionStatus(_participantID));
-            } else {
-                dispatch(showContextMenuDetails(_participantID));
-            }
+            dispatch(showContextMenuDetails(_participantID, _local));
         } // else no-op
     }
 
