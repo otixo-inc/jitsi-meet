@@ -880,7 +880,7 @@
         "download": {
           "buttonText": "Ergebnisse herunterladen",
           "notification": {
-            "title": "The polls results will be downloaded shortly"
+            "title": "Die Umfrageergebnisse werden in Kürze heruntergeladen"
           }
         },
         "results": {
