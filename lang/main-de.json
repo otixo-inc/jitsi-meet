@@ -871,6 +871,18 @@
             "description": "Öffnen Sie das Umfragen-Tab um abzustimmen",
             "title": "Dieser Konferenz wurde eine Umfrage hinzugefügt"
         },
+        "copy": {
+            "buttonText": "Ergebnisse in die Zwischenablage kopieren",
+            "notification": {
+              "title": "Die Umfrageergebnisse wurden in deine Zwischenablage kopiert"
+            }
+        },
+        "download": {
+          "buttonText": "Ergebnisse herunterladen",
+          "notification": {
+            "title": "The polls results will be downloaded shortly"
+          }
+        },
         "results": {
             "changeVote": "Antwort ändern",
             "empty": "Es gibt bisher keine Umfragen in dieser Konferenz. Sie können hier eine Umfrage starten!",
