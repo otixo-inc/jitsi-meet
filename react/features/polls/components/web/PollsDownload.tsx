@@ -11,6 +11,7 @@ import {
     NOTIFICATION_TIMEOUT_TYPE,
     NOTIFICATION_TYPE,
 } from "../../../notifications/constants";
+// @ts-ignore
 import { convertPollsToText } from "./convertPollsToText";
 
 const useStyles = makeStyles()((theme) => {

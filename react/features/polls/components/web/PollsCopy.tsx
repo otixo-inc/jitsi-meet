@@ -13,6 +13,7 @@ import {
     NOTIFICATION_TYPE,
 } from "../../../notifications/constants";
 
+// @ts-ignore
 import {convertPollsToText} from './convertPollsToText'
 
 const useStyles = makeStyles()((theme) => {
