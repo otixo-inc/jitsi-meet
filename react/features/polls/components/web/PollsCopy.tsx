@@ -2,10 +2,10 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 
-import { BUTTON_TYPES } from "../../../base/ui/constants.web";
+import { BUTTON_TYPES } from "../../../base/ui/constants";
 import Button from "../../../base/ui/components/web/Button";
-import { IReduxState } from "../../../app/types";
-import { copyText } from "../../../base/util/copyText.web";
+import { IState } from "../../../app/types";
+import { copyText } from "../../../base/util/copyText";
 import { makeStyles } from "tss-react/mui";
 import { showNotification } from "../../../notifications/actions";
 import {
@@ -29,7 +29,7 @@ const PollsCopy = () => {
     const dispatch = useDispatch();
     const { classes } = useStyles();
     const polls = useSelector(
-        (state: IReduxState) => state["features/polls"].polls
+        (state: IState) => state["features/polls"].polls
     );
 
     if (!Object.values(polls).length) {
