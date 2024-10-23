@@ -23,7 +23,7 @@ const PollsPane = (props: AbstractProps) => {
             <div className = { 'poll-container' } >
                 <PollsList />
             </div>
-            <div className = 'poll-footer poll-create-footer'>
+            <div className = 'poll-footer poll-create-footer poll-footer-wrap'>
                 <Button
                     accessibilityLabel = { t('polls.create.create') }
                     autoFocus = { true }

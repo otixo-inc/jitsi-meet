@@ -349,6 +349,10 @@ ol.poll-result-list {
     width: calc(100% - 32px);
 }
 
+.poll-footer-wrap {
+    flex-direction: column;
+}
+
 .poll-footer {
   display: flex;
   justify-content: space-between;
