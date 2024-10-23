@@ -10,6 +10,8 @@ import type { AbstractProps } from '../AbstractPollsPane';
 import PollCreate from './PollCreate';
 // @ts-ignore
 import PollsList from './PollsList';
+// @ts-ignore
+import PollsCopy from './PollsCopy';
 
 
 const PollsPane = (props: AbstractProps) => {
@@ -28,6 +30,7 @@ const PollsPane = (props: AbstractProps) => {
                     fullWidth = { true }
                     labelKey = { 'polls.create.create' }
                     onClick = { onCreate } />
+                <PollsCopy />
             </div>
         </div>;
 };
