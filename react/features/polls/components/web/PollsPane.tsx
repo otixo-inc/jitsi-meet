@@ -6,6 +6,9 @@ import AbstractPollsPane, { AbstractProps } from '../AbstractPollsPane';
 
 import PollCreate from './PollCreate';
 import PollsList from './PollsList';
+import PollsNotify from './PollsNotify';
+import PollsCopy from './PollsCopy';
+// import PollsDownload from './PollsDownload';
 /* eslint-enable lines-around-comment */
 
 const useStyles = makeStyles()(() => {
@@ -15,7 +18,7 @@ const useStyles = makeStyles()(() => {
             position: 'relative'
         },
         listContainer: {
-            height: 'calc(100% - 88px)',
+            height: 'calc(100% - 128px)',
             overflowY: 'auto'
         },
         footer: {
@@ -30,12 +33,13 @@ const useStyles = makeStyles()(() => {
 
 const PollsPane = ({ createMode, onCreate, setCreateMode, t }: AbstractProps) => {
     const { classes } = useStyles();
-
+    
     return createMode
         ? <PollCreate setCreateMode = { setCreateMode } />
         : <div className = { classes.container }>
             <div className = { classes.listContainer } >
-                <PollsList />
+                <PollsList /> 
+                <PollsNotify />
             </div>
             <div className = { classes.footer }>
                 <Button
@@ -43,6 +47,8 @@ const PollsPane = ({ createMode, onCreate, setCreateMode, t }: AbstractProps) =>
                     fullWidth = { true }
                     labelKey = { 'polls.create.create' }
                     onClick = { onCreate } />
+                <PollsCopy />
+                {/* <PollsDownload /> */}
             </div>
         </div>;
 };
