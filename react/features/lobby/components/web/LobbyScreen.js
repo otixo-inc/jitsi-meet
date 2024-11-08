@@ -66,7 +66,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
      * @inheritdoc
      */
     render() {
-        const { _deviceStatusVisible, showCopyUrlButton, t, _knocking } = this.props;
+        const { _deviceStatusVisible, showCopyUrlButton, t } = this.props;
 
         return (
           <>
