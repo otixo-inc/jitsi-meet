@@ -2,8 +2,8 @@
 
 import React from 'react';
 
-import { translate } from '../../../base/i18n';
-import { Icon, IconClose } from '../../../base/icons';
+import { translate, translateToHTML } from '../../../base/i18n';
+import { Icon, IconClose, IconVolume, IconVolumeEmpty, IconVolumeOff } from '../../../base/icons';
 import { ActionButton, InputField, PreMeetingScreen } from '../../../base/premeeting';
 import { LoadingIndicator } from '../../../base/react';
 import { connect } from '../../../base/redux';
@@ -14,6 +14,8 @@ import AbstractLobbyScreen, {
     _mapStateToProps
 } from '../AbstractLobbyScreen';
 
+import './LobbyScreen.css'
+
 /**
  * Implements a waiting screen that represents the participant being in the lobby.
  */
@@ -23,6 +25,10 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
      * scrolling to the end of the chat messages.
      */
     _messageContainerRef: Object;
+    /**
+     * Reference to the audio element for playing lobby muic
+     */
+    _lobbyMusicRef: Object;
 
     /**
        * Initializes a new {@code LobbyScreen} instance.
@@ -34,6 +40,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
         super(props);
 
         this._messageContainerRef = React.createRef();
+        this._lobbyMusicRef = React.createRef();
     }
 
     /**
@@ -43,6 +50,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
        */
     componentDidMount() {
         this._scrollMessageContainerToBottom(true);
+        this._playLobbyMusic()
     }
 
     /**
@@ -67,14 +75,64 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
         const { _deviceStatusVisible, showCopyUrlButton, t } = this.props;
 
         return (
+          <>
             <PreMeetingScreen
                 className = 'lobby-screen'
                 showCopyUrlButton = { showCopyUrlButton }
-                showDeviceStatus = { _deviceStatusVisible }
+                showDeviceStatus = { false }
+                showDeviceStatusInVideo= { _deviceStatusVisible }
                 title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
+                <audio src="sounds/lobby.mp3" loop ref={this._lobbyMusicRef} />
+                {this._renderWeTeamTitle()}
                 { this._renderContent() }
             </PreMeetingScreen>
+          </>
         );
+    }
+
+    _playLobbyMusic(){
+      const play = () => {
+        this._lobbyMusicRef.current.play().catch(e => {
+          /*
+            https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#audiovideo_elements
+            If the browser prevents playback because the user has not interacted with the document.
+            Try to play the sound again in 1 second. Keep trying until it succeeds or the invitation ends.
+          */
+          setTimeout(play, 1000);
+        });
+      };
+      play();
+    }
+
+    _renderWeTeamTitle() {
+      const { t, _knocking } = this.props;
+      return (
+        <span className='we-team-lobby-title-container'>
+          <span className='we-team-lobby-title'>
+            {t(_knocking ? 'lobby.weTeamLobbyTitle': 'lobby.weTeamCheckInTitle')}
+            </span>
+          {/* <Icon
+            className="we-team-lobby-music-control"
+            ariaLabel = { t(this.state.lobbyMusicPlaying ? 'lobby.stopMusic' : 'lobby.playMusic') }
+            role = 'button'
+            size={24}
+            src = { this.state.lobbyMusicPlaying ? IconVolume : IconVolumeOff }
+            onClick={()=>{
+              if (this._lobbyMusicRef.current.paused) {
+                this._lobbyMusicRef.current.play()
+                this.setState({
+                  lobbyMusicPlaying: true
+                })
+              } else {
+                this._lobbyMusicRef.current.pause();
+                this.setState({
+                  lobbyMusicPlaying: false
+                })
+              }
+            }}
+          /> */}
+        </span>
+      )
     }
 
     _getScreenTitleKey: () => string;
@@ -111,22 +169,23 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
      * @inheritdoc
      */
     _renderJoining() {
-        const { _isLobbyChatActive } = this.props;
+        const { _isLobbyChatActive, t } = this.props;
 
         return (
             <div className = 'lobby-screen-content'>
                 {_isLobbyChatActive
                     ? this._renderLobbyChat()
                     : (
-                        <>
-                            <div className = 'spinner'>
-                                <LoadingIndicator size = 'large' />
-                            </div>
-                            <span className = 'joining-message'>
-                                { this.props.t('lobby.joiningMessage') }
-                            </span>
-                        </>
-                    )}
+                        <span className = 'we-team-lobby-message'>
+                          { 
+                            translateToHTML(
+                              t,
+                              'lobby.weTeamLobbyMessage'
+                            )
+                          }
+                        </span>
+                    )
+                }
                 { this._renderStandardButtons() }
             </div>
         );
@@ -183,11 +242,21 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
         const { t } = this.props;
 
         return (
+          <>          
+            <span className = 'we-team-checkin-message'>
+                { 
+                  translateToHTML(
+                    t,
+                    'lobby.weTeamCheckInMessage'
+                  )
+                }
+            </span>
             <InputField
                 onChange = { this._onChangeDisplayName }
                 placeHolder = { t('lobby.nameField') }
                 testId = 'lobby.nameField'
                 value = { displayName } />
+          </>
         );
     }
 
