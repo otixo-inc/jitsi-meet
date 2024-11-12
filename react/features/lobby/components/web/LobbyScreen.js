@@ -96,7 +96,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
           <span className='we-team-lobby-title'>
             {t(_knocking ? 'lobby.weTeamLobbyTitle': 'lobby.weTeamCheckInTitle')}
             </span>
-          <Icon
+          {/* <Icon
             className="we-team-lobby-music-control"
             ariaLabel = { t(this.state.lobbyMusicPlaying ? 'lobby.stopMusic' : 'lobby.playMusic') }
             role = 'button'
@@ -115,7 +115,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
                 })
               }
             }}
-          />
+          /> */}
         </span>
       )
     }
