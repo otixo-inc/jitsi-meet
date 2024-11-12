@@ -3,7 +3,7 @@
 import React from 'react';
 
 import { translate, translateToHTML } from '../../../base/i18n';
-import { Icon, IconClose } from '../../../base/icons';
+import { Icon, IconClose, IconVolume, IconVolumeEmpty, IconVolumeOff } from '../../../base/icons';
 import { ActionButton, InputField, PreMeetingScreen } from '../../../base/premeeting';
 import { LoadingIndicator } from '../../../base/react';
 import { connect } from '../../../base/redux';
@@ -25,6 +25,10 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
      * scrolling to the end of the chat messages.
      */
     _messageContainerRef: Object;
+    /**
+     * Reference to the audio element for playing lobby muic
+     */
+    _lobbyMusicRef: Object;
 
     /**
        * Initializes a new {@code LobbyScreen} instance.
@@ -36,6 +40,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
         super(props);
 
         this._messageContainerRef = React.createRef();
+        this._lobbyMusicRef = React.createRef();
     }
 
     /**
@@ -76,6 +81,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
                 showDeviceStatus = { false }
                 showDeviceStatusInVideo= { _deviceStatusVisible }
                 title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
+                <audio src="sounds/lobby.mp3" autoPlay loop ref={this._lobbyMusicRef} />
                 {this._renderWeTeamTitle()}
                 { this._renderContent() }
             </PreMeetingScreen>
@@ -89,7 +95,27 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
         <span className='we-team-lobby-title-container'>
           <span className='we-team-lobby-title'>
             {t(_knocking ? 'lobby.weTeamLobbyTitle': 'lobby.weTeamCheckInTitle')}
-          </span>
+            </span>
+          <Icon
+            className="we-team-lobby-music-control"
+            ariaLabel = { t(this.state.lobbyMusicPlaying ? 'lobby.stopMusic' : 'lobby.playMusic') }
+            role = 'button'
+            size={24}
+            src = { this.state.lobbyMusicPlaying ? IconVolume : IconVolumeOff }
+            onClick={()=>{
+              if (this._lobbyMusicRef.current.paused) {
+                this._lobbyMusicRef.current.play()
+                this.setState({
+                  lobbyMusicPlaying: true
+                })
+              } else {
+                this._lobbyMusicRef.current.pause();
+                this.setState({
+                  lobbyMusicPlaying: false
+                })
+              }
+            }}
+          />
         </span>
       )
     }
