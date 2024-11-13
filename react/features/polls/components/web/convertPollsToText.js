@@ -15,10 +15,18 @@ export const convertPollsToText = polls => {
 
       answers.sort((a, b) => b.voters.size - a.voters.size);
 
+      const getVoterNames = voters => {
+        return voters.map(voter=>{
+          return `${voter}
+`
+        }).join("");
+      }
+
       const answersText = answers
           .map((answer) => {
               const percentage = totalVoters === 0 ? 0 : Math.round(answer.voters.size / totalVoters * 100);              
               return `${answer.name}: ${answer.voters.size} (${percentage}%)
+${getVoterNames(answer.voters.values().toArray())}
 `;
           })
           .join("");
