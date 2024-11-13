@@ -50,6 +50,7 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
        */
     componentDidMount() {
         this._scrollMessageContainerToBottom(true);
+        this._playLobbyMusic()
     }
 
     /**
@@ -81,12 +82,26 @@ class LobbyScreen extends AbstractLobbyScreen<Props> {
                 showDeviceStatus = { false }
                 showDeviceStatusInVideo= { _deviceStatusVisible }
                 title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
-                <audio src="sounds/lobby.mp3" autoPlay loop ref={this._lobbyMusicRef} />
+                <audio src="sounds/lobby.mp3" loop ref={this._lobbyMusicRef} />
                 {this._renderWeTeamTitle()}
                 { this._renderContent() }
             </PreMeetingScreen>
           </>
         );
+    }
+
+    _playLobbyMusic(){
+      const play = () => {
+        this._lobbyMusicRef.current.play().catch(e => {
+          /*
+            https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#audiovideo_elements
+            If the browser prevents playback because the user has not interacted with the document.
+            Try to play the sound again in 1 second. Keep trying until it succeeds or the invitation ends.
+          */
+          setTimeout(play, 1000);
+        });
+      };
+      play();
     }
 
     _renderWeTeamTitle() {
