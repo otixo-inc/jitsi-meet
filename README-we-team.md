@@ -85,7 +85,7 @@ Visit https://github.com/otixo-inc/jitsi-meet/releases and create a new release 
 
 Follow the instructions here to create a new jitsi stack in AWS with latest package:
 
-https://github.com/otixo-inc/Infrastructure/blob/master/jitsi-aws/README.md
+https://github.com/otixo-inc/Infrastructure/blob/master/jitsi-aws/README.md#create-a-stack
 
 ## Synching our fork with the Jitsi origin
 
