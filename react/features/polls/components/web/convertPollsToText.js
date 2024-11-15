@@ -14,28 +14,25 @@ export const convertPollsToText = polls => {
       const { answers } = poll;
 
       answers.sort((a, b) => b.voters.size - a.voters.size);
+     
+      const text = []
 
-      const getVoterNames = voters => {
-        return voters.map(voter=>{
-          return `${voter}
-`
-        }).join("");
-      }
+      text.push(poll.question)
+      text.push('\n')
+      text.push('\n')
 
-      const answersText = answers
-          .map((answer) => {
-              const percentage = totalVoters === 0 ? 0 : Math.round(answer.voters.size / totalVoters * 100);              
-              return `${answer.name}: ${answer.voters.size} (${percentage}%)
-${getVoterNames(answer.voters.values().toArray())}
-`;
-          })
-          .join("");
+      answers.forEach(answer => {
+        const percentage = totalVoters === 0 ? 0 : Math.round(answer.voters.size / totalVoters * 100);
+        text.push(`${answer.name}: ${answer.voters.size} (${percentage}%)`)
+        text.push('\n')
+        answer.voters.values().toArray().forEach(voter=> {
+          text.push(voter)
+          text.push('\n')
+        })
+        text.push('\n')
+      });
+      text.push('\n')
 
-      const s = `${poll.question}
-
-${answersText}
-`;
-
-      return previous.concat(s);
+      return previous.concat(text.join(""));
   }, "");
 };
