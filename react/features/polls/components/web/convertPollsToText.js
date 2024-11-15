@@ -25,8 +25,8 @@ export const convertPollsToText = polls => {
         const percentage = totalVoters === 0 ? 0 : Math.round(answer.voters.size / totalVoters * 100);
         text.push(`${answer.name}: ${answer.voters.size} (${percentage}%)`)
         text.push('\n')
-        answer.voters.values().toArray().forEach(voter=> {
-          text.push(voter)
+        Array.from(answer.voters).forEach(([ id, name ]) => {
+          text.push(name)
           text.push('\n')
         })
         text.push('\n')
