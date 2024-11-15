@@ -51,6 +51,7 @@ Connect to the server:
 ```sh
 # move our package to /tmp
 mv jitsi-meet.tar.bz2 /tmp
+cd /tmp
 # remove the previous installation
 rm jitsi-meet-weteam.deb weteamweb/ -rf
 ```
