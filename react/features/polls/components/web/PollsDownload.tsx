@@ -13,6 +13,9 @@ import {
 } from "../../../notifications/constants";
 // @ts-ignore
 import { convertPollsToText } from "./convertPollsToText";
+import { downloadText } from "../../../base/util/downloadText";
+import { getConferenceName } from "../../../base/conference/functions";
+import { getLocalizedDateFormatter } from "../../../base/i18n/dateUtil";
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -30,14 +33,20 @@ const PollsDownload = () => {
         (state: IState) => state["features/polls"].polls
     );
 
+    const roomName = useSelector((state: IState) => getConferenceName(state));
+
     if (!Object.values(polls).length) {
         return null;
     }
 
     const onClick = () => {
         try {
+            const pollsText = convertPollsToText(polls);
+            const now = Date.now()
+            const date = `${getLocalizedDateFormatter(now).format('DD MM YYYY hh:mm:ss')}`
+            downloadText(pollsText, `${t("polls.download.fileName", {date, roomName})}.txt`);
             if (typeof APP !== "undefined") {
-                APP.API.pollResultsDownloadRequested(convertPollsToText(polls));
+                APP.API.pollResultsDownloadRequested(pollsText);
             }
             dispatch(
                 showNotification(

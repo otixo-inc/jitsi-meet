@@ -18,20 +18,20 @@ export const convertPollsToText = polls => {
       const text = []
 
       text.push(poll.question)
-      text.push('\n')
-      text.push('\n')
+      text.push('\r\n')
+      text.push('\r\n')
 
       answers.forEach(answer => {
         const percentage = totalVoters === 0 ? 0 : Math.round(answer.voters.size / totalVoters * 100);
         text.push(`${answer.name}: ${answer.voters.size} (${percentage}%)`)
-        text.push('\n')
+        text.push('\r\n')
         Array.from(answer.voters).forEach(([ id, name ]) => {
           text.push(name)
-          text.push('\n')
+          text.push('\r\n')
         })
-        text.push('\n')
+        text.push('\r\n')
       });
-      text.push('\n')
+      text.push('\r\n')
 
       return previous.concat(text.join(""));
   }, "");

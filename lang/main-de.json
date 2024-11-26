@@ -783,6 +783,7 @@
         },
         "download": {
           "buttonText": "Ergebnisse herunterladen",
+          "fileName": "Umfrageergebnisse {{roomName}} {{date}}",
           "notification": {
             "title": "Die Umfrageergebnisse werden in Kürze heruntergeladen"
           }
