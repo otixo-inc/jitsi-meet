@@ -13,6 +13,7 @@ import {
 } from "../../../notifications/constants";
 // @ts-ignore
 import { convertPollsToText } from "./convertPollsToText";
+import { downloadText } from "../../../base/util/downloadText";
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -36,8 +37,10 @@ const PollsDownload = () => {
 
     const onClick = () => {
         try {
+            const pollsText = convertPollsToText(polls);
+            downloadText(pollsText, 'poll-results.txt');
             if (typeof APP !== "undefined") {
-                APP.API.pollResultsDownloadRequested(convertPollsToText(polls));
+                APP.API.pollResultsDownloadRequested(pollsText);
             }
             dispatch(
                 showNotification(
