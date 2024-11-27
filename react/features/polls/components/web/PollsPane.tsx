@@ -12,6 +12,7 @@ import PollCreate from './PollCreate';
 import PollsList from './PollsList';
 // @ts-ignore
 import PollsDownload from './PollsDownload';
+import PollsCopy from './PollsCopy';
 
 
 const PollsPane = (props: AbstractProps) => {
@@ -31,6 +32,7 @@ const PollsPane = (props: AbstractProps) => {
                     labelKey = { 'polls.create.create' }
                     onClick = { onCreate } />
                 <PollsDownload />
+                <PollsCopy />
             </div>
         </div>;
 };

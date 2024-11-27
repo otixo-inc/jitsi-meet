@@ -1,5 +1,5 @@
-export const convertPollsToText = polls => {
-  return Object.values(polls).reduce((previous, poll, index, arr) => {
+export const convertPollsToText = (polls, t) => {
+  return polls.reduce((previous, poll, index, arr) => {
       const voterSet = new Set();
 
       // Getting every voters ID that participates to the poll
@@ -19,6 +19,10 @@ export const convertPollsToText = polls => {
 
       text.push(poll.question)
       text.push('\r\n')
+      if (poll.creatorName) {
+        text.push(t("polls.download.by", {name: poll.creatorName}))
+        text.push('\r\n')
+      }
       text.push('\r\n')
 
       answers.forEach(answer => {
