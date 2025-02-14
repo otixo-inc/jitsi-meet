@@ -221,7 +221,7 @@ StateListenerRegistry.register(
 
 function _shouldAutoApproveKnockingParticipant(getState, name) {
   const { participantNamesToAutoApprove } = getState()['features/base/config'];
-  return participantNamesToAutoApprove.includes(name)
+  return participantNamesToAutoApprove?.includes(name)
 }
 
 function _areAllKnockingParticipantsAutoApproved(getState, knockingParticipants) {
