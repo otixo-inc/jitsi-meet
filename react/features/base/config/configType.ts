@@ -426,6 +426,7 @@ export interface IConfig {
     hideEmailInSettings?: boolean;
     hideLobbyButton?: boolean;
     hideLoginButton?: boolean;
+    hidePasswordInLobby?: boolean;
     hideParticipantsStats?: boolean;
     hideRecordingLabel?: boolean;
     hosts?: {

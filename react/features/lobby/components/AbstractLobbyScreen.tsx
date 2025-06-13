@@ -439,7 +439,7 @@ export function _mapStateToProps(state: IReduxState) {
     const localParticipant = getLocalParticipant(state);
     const participantId = localParticipant?.id;
     const inviteEnabledFlag = getFeatureFlag(state, INVITE_ENABLED, true);
-    const { disableInviteFunctions } = state['features/base/config'];
+    const { disableInviteFunctions, hidePasswordInLobby } = state['features/base/config'];
     const { isDisplayNameRequiredError, knocking, passwordJoinFailed } = state['features/lobby'];
     const { iAmSipGateway } = state['features/base/config'];
     const { disableLobbyPassword } = getSecurityUiConfig(state);
@@ -461,7 +461,7 @@ export function _mapStateToProps(state: IReduxState) {
         _participantId: participantId,
         _participantName: localParticipant?.name,
         _passwordJoinFailed: passwordJoinFailed,
-        _renderPassword: !iAmSipGateway && !disableLobbyPassword && !lobbyWaitingForHost,
+        _renderPassword: !iAmSipGateway && !disableLobbyPassword && !lobbyWaitingForHost && !hidePasswordInLobby,
         showCopyUrlButton
     };
 }
