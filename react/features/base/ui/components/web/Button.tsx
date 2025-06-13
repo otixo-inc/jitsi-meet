@@ -51,7 +51,7 @@ const useStyles = makeStyles()(theme => {
         button: {
             backgroundColor: theme.palette.action01,
             color: theme.palette.text01,
-            borderRadius: theme.shape.borderRadius,
+            borderRadius: 50,
             padding: '10px 16px',
             display: 'flex',
             alignItems: 'center',

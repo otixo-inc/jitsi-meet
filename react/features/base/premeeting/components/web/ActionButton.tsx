@@ -83,7 +83,7 @@ const useStyles = makeStyles()(theme => {
     return {
         actionButton: {
             ...withPixelLineHeight(theme.typography.bodyLongBold),
-            borderRadius: theme.shape.borderRadius,
+            borderRadius: 50,
             boxSizing: 'border-box',
             color: theme.palette.text01,
             cursor: 'pointer',

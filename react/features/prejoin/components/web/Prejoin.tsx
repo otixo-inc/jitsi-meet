@@ -42,6 +42,7 @@ import JoinByPhoneDialog from './dialogs/JoinByPhoneDialog';
 
 interface IProps {
 
+    showDeviceStatusInVideo?: boolean;
     /**
      * Flag signaling if the device status is visible or not.
      */

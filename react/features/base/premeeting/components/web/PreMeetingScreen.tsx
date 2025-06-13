@@ -67,6 +67,11 @@ interface IProps {
     showDeviceStatus: boolean;
 
     /**
+     * Indicates whether the device status should be shown.
+     */
+    showDeviceStatusInVideo?: boolean;
+
+    /**
      * Indicates whether to display the recording warning.
      */
     showRecordingWarning?: boolean;
@@ -187,6 +192,7 @@ const PreMeetingScreen = ({
     children,
     className,
     showDeviceStatus,
+    showDeviceStatusInVideo,
     showRecordingWarning,
     showUnsafeRoomWarning,
     skipPrejoinButton,
@@ -217,11 +223,11 @@ const PreMeetingScreen = ({
     return (
         <div className = { clsx('premeeting-screen', classes.container, className) }>
             <div style = { style }>
-                <div className = { classes.content }>
+                <div className = { clsx(classes.content, 'we-team-content') }>
                     {_isPreCallTestEnabled && <ConnectionStatus />}
 
-                    <div className = { classes.contentControls }>
-                        <h1 className = { classes.title }>
+                    <div className = { clsx(classes.contentControls, 'we-team-content-controls') }>
+                        <h1 className = { clsx(classes.title, "we-team-title") }>
                             {title}
                         </h1>
                         {/* {_roomName && (
@@ -254,7 +260,8 @@ const PreMeetingScreen = ({
             </div>
             <Preview
                 videoMuted = { videoMuted }
-                videoTrack = { videoTrack } />
+                videoTrack = { videoTrack } 
+                showDeviceStatusInVideo = { showDeviceStatusInVideo } />
         </div>
     );
 };

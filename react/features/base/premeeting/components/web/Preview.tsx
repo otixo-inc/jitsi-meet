@@ -7,6 +7,7 @@ import Video from '../../../media/components/web/Video';
 import { getLocalParticipant } from '../../../participants/functions';
 import { getDisplayName } from '../../../settings/functions.web';
 import { getLocalVideoTrack } from '../../../tracks/functions.web';
+import DeviceStatus from '../../../../prejoin/components/web/preview/DeviceStatus';
 
 export interface IProps {
 
@@ -34,6 +35,11 @@ export interface IProps {
      * The JitsiLocalTrack to display.
      */
     videoTrack?: Object;
+
+    /**
+     * Indicates whether the device status should be shown.
+     */
+    showDeviceStatusInVideo?: boolean;
 }
 
 /**
@@ -43,7 +49,7 @@ export interface IProps {
  * @returns {ReactElement}
  */
 function Preview(props: IProps) {
-    const { _participantId, flipVideo, name, videoMuted, videoTrack } = props;
+    const { _participantId, flipVideo, name, videoMuted, videoTrack, showDeviceStatusInVideo } = props;
     const className = flipVideo ? 'flipVideoX' : '';
 
     useEffect(() => {
@@ -60,10 +66,17 @@ function Preview(props: IProps) {
         <div id = 'preview'>
             {!videoMuted && videoTrack
                 ? (
+                  <>
                     <Video
                         className = { className }
                         id = 'prejoinVideo'
                         videoTrack = {{ jitsiTrack: videoTrack }} />
+                      { showDeviceStatusInVideo && 
+                        <div className='preview-device-status'>
+                          <DeviceStatus /> 
+                        </div>
+                      }
+                  </>
                 )
                 : (
                     <Avatar

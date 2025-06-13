@@ -134,6 +134,11 @@ interface IState {
      * The state of the screen. One of {@code SCREEN_STATES[*]}.
      */
     screenState: number;
+
+    /**
+     * The state of the lobby music
+     */
+    lobbyMusicPlaying: boolean;
 }
 
 /**
@@ -154,6 +159,7 @@ export default class AbstractLobbyScreen<P extends IProps = IProps> extends Pure
             isChatOpen: true,
             password: '',
             passwordJoinFailed: false,
+            lobbyMusicPlaying: true,
             screenState: props._participantName ? SCREEN_STATES.VIEW : SCREEN_STATES.EDIT
         };
 
