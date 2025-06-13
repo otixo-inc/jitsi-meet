@@ -2294,6 +2294,32 @@ class API {
             enabled
         });
     }
+    
+    /**
+     * Notify the external application (if API is enabled) when the poll results change.
+     *Add commentMore actions
+     * @param {Array} polls - The new polls data.
+     * @returns {void}
+     */
+    pollResultsChanged(polls) {
+        this._sendEvent({
+            name: 'poll-results-changed',
+            polls
+        });
+    }
+
+    /**
+     * Notify the external application (if API is enabled) when the poll results change.
+     *
+     * @param {Array} polls - The new polls data.
+     * @returns {void}
+     */
+    pollResultsDownloadRequested(polls) {
+        this._sendEvent({
+            name: 'poll-results-download-requested',
+            polls
+        });
+    }
 
     /**
      * Disposes the allocated resources.

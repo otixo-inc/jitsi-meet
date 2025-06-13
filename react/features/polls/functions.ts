@@ -1,6 +1,6 @@
 import { IReduxState } from '../app/types';
-
 import { IAnswerData } from './types';
+import { getParticipantById, getParticipantDisplayName } from '../base/participants/functions';
 
 /**
  * Selector creator for determining if poll results should be displayed or not.
@@ -24,6 +24,37 @@ export function getPoll(pollId: string) {
     return function(state: IReduxState) {
         return state['features/polls'].polls[pollId];
     };
+}
+
+/**
+ * Selector creator for polls.
+ *
+ * @returns {Function}
+ */
+export function getPolls() {
+  return function (state: IReduxState) {
+    const { polls } = state['features/polls'];
+    return Object.values(polls).map(poll => {
+      const creatorName = getParticipantDisplayName(state, poll.senderId ?? "");
+      const answers = poll.answers?.map(answer => {
+        const answerVoters = answer.voters?.length ? [...answer.voters] : Object.keys({ ...answer.voters });
+        return {
+          ...answer,
+          voters: answerVoters.map(id => {
+            return {
+              id,
+              name: getParticipantDisplayName(state, id)
+            };
+          })
+        }
+      })
+      return {
+        ...poll,
+        answers,
+        creatorName
+      }
+    })
+  };
 }
 
 /**

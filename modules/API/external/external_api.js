@@ -148,6 +148,8 @@ const events = {
     'participants-pane-toggled': 'participantsPaneToggled',
     'password-required': 'passwordRequired',
     'peer-connection-failure': 'peerConnectionFailure',
+    'poll-results-changed': 'pollResultsChanged',
+    'poll-results-download-requested': 'pollResultsDownloadRequested',
     'prejoin-screen-loaded': 'prejoinScreenLoaded',
     'proxy-connection-event': 'proxyConnectionEvent',
     'raise-hand-updated': 'raiseHandUpdated',

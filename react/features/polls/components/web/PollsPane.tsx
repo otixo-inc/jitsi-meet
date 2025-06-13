@@ -7,6 +7,7 @@ import AbstractPollsPane, { AbstractProps } from '../AbstractPollsPane';
 import PollCreate from './PollCreate';
 import PollsList from './PollsList';
 /* eslint-enable lines-around-comment */
+import PollsDownload from './PollsDownload';
 
 const useStyles = makeStyles()(() => {
     return {
@@ -43,6 +44,7 @@ const PollsPane = ({ createMode, onCreate, setCreateMode, t }: AbstractProps) =>
                     fullWidth = { true }
                     labelKey = { 'polls.create.create' }
                     onClick = { onCreate } />
+                <PollsDownload />
             </div>
         </div>;
 };
