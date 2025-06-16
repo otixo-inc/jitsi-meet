@@ -79,6 +79,9 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
           <>
             <PreMeetingScreen
                 className = 'lobby-screen'
+                containerStyle={{
+                  backgroundImage: "url(/images/lobby-bg-sm.jpeg)"
+                }}
                 showCopyUrlButton = { showCopyUrlButton }
                 showDeviceStatus = { false }
                 showDeviceStatusInVideo= { _deviceStatusVisible }

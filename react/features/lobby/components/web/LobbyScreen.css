@@ -46,7 +46,6 @@
 }
 
 .lobby-screen {
-  background-image: url("/images/lobby-bg-sm.jpeg") !important;
   background-repeat: no-repeat !important;    
   background-position: center !important;
   background-size: cover !important;

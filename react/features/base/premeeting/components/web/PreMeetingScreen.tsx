@@ -67,6 +67,11 @@ interface IProps {
     showDeviceStatus: boolean;
 
     /**
+     * Style to apply to outer div
+     */
+    containerStyle?: object;
+
+    /**
      * Indicates whether the device status should be shown.
      */
     showDeviceStatusInVideo?: boolean;
@@ -191,6 +196,7 @@ const PreMeetingScreen = ({
     _roomName,
     children,
     className,
+    containerStyle,
     showDeviceStatus,
     showDeviceStatusInVideo,
     showRecordingWarning,
@@ -221,7 +227,9 @@ const PreMeetingScreen = ({
     }, [ _roomName ]);
 
     return (
-        <div className = { clsx('premeeting-screen', classes.container, className) }>
+        <div className = { clsx('premeeting-screen', classes.container, className) }
+         style={ containerStyle }
+        >
             <div style = { style }>
                 <div className = { clsx(classes.content, 'we-team-content') }>
                     {_isPreCallTestEnabled && <ConnectionStatus />}
