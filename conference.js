@@ -131,7 +131,6 @@ import {
     createLocalTracksF,
     getLocalJitsiAudioTrack,
     getLocalJitsiVideoTrack,
-    getLocalTracks,
     getLocalVideoTrack,
     isLocalTrackMuted,
     isUserInteractionRequiredForUnmute
@@ -601,7 +600,7 @@ export default {
 
         const { tryCreateLocalTracks, errors } = this.createInitialLocalTracks(initialOptions, true);
 
-        tryCreateLocalTracks.then(async tr => {
+        tryCreateLocalTracks.then(tr => {
             const createLocalTracksEnd = window.performance.now();
 
             connectionTimes['conference.init.createLocalTracks.end'] = createLocalTracksEnd;
@@ -1058,6 +1057,14 @@ export default {
         const logs = APP.connection.getLogs();
 
         downloadJSON(logs, filename);
+    },
+
+    /**
+     * Download app state, a function that can be called from console while debugging.
+     * @param filename (optional) specify target filename
+     */
+    saveState(filename = 'meet-state.json') {
+        downloadJSON(APP.store.getState(), filename);
     },
 
     /**
@@ -1548,7 +1555,6 @@ export default {
                 }
 
                 APP.store.dispatch(localParticipantRoleChanged(role));
-                APP.API.notifyUserRoleChanged(id, role);
             } else {
                 APP.store.dispatch(participantRoleChanged(id, role));
             }
@@ -1822,35 +1828,6 @@ export default {
                     onStartMutedPolicyChanged(audio, video));
             }
         );
-        room.on(JitsiConferenceEvents.STARTED_MUTED, () => {
-            const audioMuted = room.isStartAudioMuted();
-            const videoMuted = room.isStartVideoMuted();
-            const localTracks = getLocalTracks(APP.store.getState()['features/base/tracks']);
-            const promises = [];
-
-            APP.store.dispatch(setAudioMuted(audioMuted));
-            APP.store.dispatch(setVideoMuted(videoMuted));
-
-            // Remove the tracks from the peerconnection.
-            for (const track of localTracks) {
-                // Always add the track on Safari because of a known issue where audio playout doesn't happen
-                // if the user joins audio and video muted, i.e., if there is no local media capture.
-                if (audioMuted && track.jitsiTrack?.getType() === MEDIA_TYPE.AUDIO && !browser.isWebKitBased()) {
-                    promises.push(this.useAudioStream(null));
-                }
-                if (videoMuted && track.jitsiTrack?.getType() === MEDIA_TYPE.VIDEO) {
-                    promises.push(this.useVideoStream(null));
-                }
-            }
-
-            Promise.allSettled(promises)
-                .then(() => {
-                    APP.store.dispatch(showNotification({
-                        titleKey: 'notify.mutedTitle',
-                        descriptionKey: 'notify.muted'
-                    }, NOTIFICATION_TIMEOUT_TYPE.SHORT));
-                });
-        });
 
         room.on(
             JitsiConferenceEvents.DATA_CHANNEL_OPENED, () => {
@@ -1888,6 +1865,16 @@ export default {
                 }, timeout);
             }
         );
+
+        room.on(JitsiConferenceEvents.PERMISSIONS_RECEIVED, p => {
+            const localParticipant = getLocalParticipant(APP.store.getState());
+
+            APP.store.dispatch(participantUpdated({
+                id: localParticipant.id,
+                local: true,
+                features: p
+            }));
+        });
     },
 
     /**
@@ -2052,8 +2039,7 @@ export default {
     _initDeviceList(setDeviceListChangeHandler = false) {
         const { mediaDevices } = JitsiMeetJS;
 
-        if (mediaDevices.isDeviceListAvailable()
-                && mediaDevices.isDeviceChangeAvailable()) {
+        if (mediaDevices.isDeviceChangeAvailable()) {
             if (setDeviceListChangeHandler) {
                 this.deviceChangeListener = devices =>
                     window.setTimeout(() => this._onDeviceListChanged(devices), 0);
@@ -2278,8 +2264,10 @@ export default {
      * @param {boolean} [requestFeedback=false] if user feedback should be
      * @param {string} [hangupReason] the reason for leaving the meeting
      * requested
+     * @param {boolean} [notifyOnConferenceTermination] whether to notify
+     * the user on conference termination
      */
-    hangup(requestFeedback = false, hangupReason) {
+    hangup(requestFeedback = false, hangupReason, notifyOnConferenceTermination) {
         APP.store.dispatch(disableReceiver());
 
         this._stopProxyConnection();
@@ -2298,7 +2286,7 @@ export default {
 
         if (requestFeedback) {
             const feedbackDialogClosed = (feedbackResult = {}) => {
-                if (!feedbackResult.wasDialogShown && hangupReason) {
+                if (!feedbackResult.wasDialogShown && hangupReason && notifyOnConferenceTermination) {
                     return APP.store.dispatch(
                         openLeaveReasonDialog(hangupReason)).then(() => feedbackResult);
                 }
