@@ -769,7 +769,7 @@ function initCommands() {
             }
 
             if (transcription) {
-                APP.store.dispatch(setRequestingSubtitles(true, false, null));
+                APP.store.dispatch(setRequestingSubtitles(true, false, null, true));
                 conference.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
                     isTranscribingEnabled: true
                 });
@@ -1048,6 +1048,12 @@ function initCommands() {
         }
         case 'rooms-info': {
             callback(getRoomsInfo(APP.store.getState()));
+            break;
+        }
+        case 'get-shared-document-url': {
+            const { etherpad } = APP.store.getState()['features/etherpad'];
+
+            callback(etherpad?.documentUrl || '');
             break;
         }
         case 'get-p2p-status': {
