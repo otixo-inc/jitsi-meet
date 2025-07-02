@@ -1,10 +1,6 @@
 # Jitsi Meet We.Team 
 
-## Get the Jitsi Meet source
-
-Clone our fork of the Jitsi Meet repository:
-
-https://github.com/otixo-inc/jitsi-meet
+This is a fork of https://github.com/jitsi/jitsi-meet
 
 ## Developing
 
@@ -12,9 +8,10 @@ Follow this guide for instuctions on how to run jitsi-meet in development mode
 
 https://jitsi.github.io/handbook/docs/dev-guide/dev-guide-web-jitsi-meet
 
-Important: Use node 16+
+Important: Use node 22+
 
 ```
+# https://meet-105.we.team can be replaced by whichever jitsi server url we are currently using at we.team
 export WEBPACK_DEV_SERVER_PROXY_TARGET=https://meet-105.we.team && make dev
 ```
 
@@ -90,10 +87,25 @@ https://github.com/otixo-inc/Infrastructure/blob/master/jitsi-aws/README.md#crea
 
 ## Synching our fork with the Jitsi origin
 
-If we want to include new Jitsi features in our fork, we need to merge the master origin branch on to our `main` branch.
+If we want to include new Jitsi features in our fork, we need to merge changes from the original jitsi repository.
 
-Find the latest Jitsi release here: https://github.com/jitsi/jitsi-meet/releases
+Find the release of Jitsi we want to merge: https://github.com/jitsi/jitsi-meet/releases.
 
-The release should be tagged. e.g. `stable/jitsi-meet_7882`
+The release should be tagged. e.g. `stable/jitsi-meet_10314`
 
-You should merge this branch with our `main` branch.
+```
+# Add the original source code as a remote
+git remote add origin https://github.com/jitsi/jitsi-meet.git
+
+# Create a new branch
+git checkout -b we-team-10314
+
+# Merge the branch from remote with our local branch (stable/jitsi-meet_10314 is the tag name)
+git merge stable/jitsi-meet_10314
+
+# Resolve any conflicts and open a PR in GitHub to merge we-team-10314 with our main branch
+```
+
+Our forked repo should now be up to date with the original repository and still include our custom changes.
+
+We don't rebase because we would need to resolve the same conflicts every time we pull from the original repository.
