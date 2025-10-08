@@ -1,7 +1,8 @@
-import { ensureTwoParticipants, muteVideoAndCheck, unmuteVideoAndCheck } from '../../helpers/participants';
+import { ensureTwoParticipants } from '../../helpers/participants';
+import { muteVideoAndCheck, unmuteVideoAndCheck } from '../helpers/mute';
 
 describe('Stop video', () => {
-    it('joining the meeting', () => ensureTwoParticipants(ctx));
+    it('joining the meeting', () => ensureTwoParticipants());
 
     it('stop video and check', () => muteVideoAndCheck(ctx.p1, ctx.p2));
 
@@ -30,7 +31,7 @@ describe('Stop video', () => {
 
         await p1.getToolbar().clickVideoMuteButton();
 
-        await ensureTwoParticipants(ctx);
+        await ensureTwoParticipants();
 
         const { p2 } = ctx;
 

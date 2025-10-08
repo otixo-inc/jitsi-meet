@@ -1,6 +1,8 @@
 import { UPDATE_CONFERENCE_METADATA } from '../base/conference/actionTypes';
 import { ILocalParticipant, IParticipant } from '../base/participants/types';
 import ReducerRegistry from '../base/redux/ReducerRegistry';
+import { ADD_FILE, _FILE_LIST_RECEIVED } from '../file-sharing/actionTypes';
+import { IVisitorChatParticipant } from '../visitors/types';
 
 import {
     ADD_MESSAGE,
@@ -8,6 +10,7 @@ import {
     CLEAR_MESSAGES,
     CLOSE_CHAT,
     EDIT_MESSAGE,
+    NOTIFY_PRIVATE_RECIPIENTS_CHANGED,
     OPEN_CHAT,
     REMOVE_LOBBY_CHAT_PARTICIPANT,
     SET_CHAT_IS_RESIZING,
@@ -25,8 +28,10 @@ const DEFAULT_STATE = {
     groupChatWithPermissions: false,
     isOpen: false,
     messages: [],
+    notifyPrivateRecipientsChangedTimestamp: undefined,
     reactions: {},
     nbUnreadMessages: 0,
+    nbUnreadFiles: 0,
     privateMessageRecipient: undefined,
     lobbyMessageRecipient: undefined,
     isLobbyChatActive: false,
@@ -50,8 +55,10 @@ export interface IChatState {
         name: string;
     } | ILocalParticipant;
     messages: IMessage[];
+    nbUnreadFiles: number;
     nbUnreadMessages: number;
-    privateMessageRecipient?: IParticipant;
+    notifyPrivateRecipientsChangedTimestamp?: number;
+    privateMessageRecipient?: IParticipant | IVisitorChatParticipant;
     width: {
         current: number;
         userSet: number | null;
@@ -64,6 +71,8 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         const newMessage: IMessage = {
             displayName: action.displayName,
             error: action.error,
+            isFromGuest: Boolean(action.isFromGuest),
+            isFromVisitor: Boolean(action.isFromVisitor),
             participantId: action.participantId,
             isReaction: action.isReaction,
             messageId: action.messageId,
@@ -73,6 +82,7 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
             privateMessage: action.privateMessage,
             lobbyChat: action.lobbyChat,
             recipient: action.recipient,
+            sentToVisitor: Boolean(action.sentToVisitor),
             timestamp: action.timestamp
         };
 
@@ -228,7 +238,8 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         return {
             ...state,
             focusedTab: action.tabId,
-            nbUnreadMessages: action.tabId === ChatTabs.CHAT ? 0 : state.nbUnreadMessages
+            nbUnreadMessages: action.tabId === ChatTabs.CHAT ? 0 : state.nbUnreadMessages,
+            nbUnreadFiles: action.tabId === ChatTabs.FILE_SHARING ? 0 : state.nbUnreadFiles
         };
 
     case SET_CHAT_WIDTH: {
@@ -257,6 +268,28 @@ ReducerRegistry.register<IChatState>('features/chat', (state = DEFAULT_STATE, ac
         return {
             ...state,
             isResizing: action.resizing
+        };
+    }
+    case NOTIFY_PRIVATE_RECIPIENTS_CHANGED:
+        return {
+            ...state,
+            notifyPrivateRecipientsChangedTimestamp: action.payload
+        };
+
+    case ADD_FILE:
+        return {
+            ...state,
+            nbUnreadFiles: action.shouldIncrementUnread ? state.nbUnreadFiles + 1 : state.nbUnreadFiles
+        };
+
+    case _FILE_LIST_RECEIVED: {
+        const remoteFilesCount = Object.values(action.files).filter(
+            (file: any) => file.authorParticipantId !== action.localParticipantId
+        ).length;
+
+        return {
+            ...state,
+            nbUnreadFiles: remoteFilesCount
         };
     }
     }

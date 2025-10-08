@@ -112,7 +112,9 @@
         "disabled": "Sending chat messages is disabled.",
         "enter": "Enter room",
         "error": "Error: your message was not sent. Reason: {{error}}",
+        "everyone": "Everyone",
         "fieldPlaceHolder": "Aa",
+        "guestsChatIndicator": "(guest)",
         "lobbyChatMessageTo": "Lobby chat message to {{recipient}}",
         "message": "Message",
         "messageAccessibleTitle": "{{user}} says:",
@@ -278,7 +280,6 @@
         "Submit": "Submit",
         "Understand": "I understand, keep me muted for now",
         "UnderstandAndUnmute": "I understand, please unmute me",
-        "WaitForHostMsg": "The conference has not yet started because no moderators have yet arrived. If you'd like to become a moderator please log-in. Otherwise, please wait.",
         "WaitForHostNoAuthMsg": "The conference has not yet started because no moderators have yet arrived. Please wait.",
         "WaitingForHostButton": "Wait for moderator",
         "WaitingForHostTitle": "Waiting for a moderator…",
@@ -380,7 +381,7 @@
         "micPermissionDeniedError": "You have not granted permission to use your microphone. You can still join the conference but others won't hear you. Use the camera button in the address bar to fix this.",
         "micTimeoutError": "Could not start audio source. Timeout occurred!",
         "micUnknownError": "Cannot use microphone for an unknown reason.",
-        "moderationAudioLabel": "Allow attendees to unmute themselves",
+        "moderationAudioLabel": "Allow non-moderators to unmute themselves",
         "moderationDesktopLabel": "Allow non-moderators to share their screen",
         "moderationVideoLabel": "Allow non-moderators to start their video",
         "muteEveryoneDialog": "The participants can unmute themselves at any time.",
@@ -521,6 +522,7 @@
         "tokenAuthFailedWithReasons": "Sorry, you're not allowed to join this call. Possible reasons: {{reason}}",
         "tokenAuthUnsupported": "Token URL is not supported.",
         "transcribing": "Transcribing",
+        "unauthenticatedAccessDisabled": "This call requires authentication. Please login in order to proceed.",
         "unlockRoom": "Remove meeting $t(lockRoomPassword)",
         "user": "User",
         "userIdentifier": "User identifier",
@@ -565,11 +567,17 @@
         "downloadFailedDescription": "Please try again.",
         "downloadFailedTitle": "Download failed",
         "downloadFile": "Download",
+        "downloadStarted": "File download started",
         "dragAndDrop": "Drag and drop files here or anywhere on screen",
         "fileAlreadyUploaded": "File has already been uploaded to this meeting.",
+        "fileRemovedByOther": "Your file '{{ fileName }}' was removed",
         "fileTooLargeDescription": "Please make sure the file does not exceed {{ maxFileSize }}.",
         "fileTooLargeTitle": "The selected file is too large",
+        "fileUploadProgress": "File upload progress",
+        "fileUploadedSuccessfully": "File uploaded successfully",
+        "newFileNotification": "{{ participantName }} shared '{{ fileName }}'",
         "removeFile": "Remove",
+        "removeFileSuccess": "File removed successfully",
         "uploadFailedDescription": "Please try again.",
         "uploadFailedTitle": "Upload failed",
         "uploadFile": "Share file"
@@ -742,13 +750,14 @@
         "notificationTitle": "Lobby",
         "passwordJoinButton": "Join",
         "title": "Lobby",
+        "toggleLabel": "Enable lobby",
+        "waitForModerator": "The conference has not yet started because no moderators have yet arrived. If you'd like to become a moderator please log-in. Otherwise, please wait.",
         "weTeamLobbyTitle": "We.Team Meet Lobby ",
         "weTeamCheckInTitle": "We.Team Meet Check-in",
         "stopMusic": "Stop Lobby Music",
         "playMusic": "Play Lobby Music",
         "weTeamCheckInMessage": "<strong>Step 1:</strong> Please enter the name with which you would like to take part in the meeting.<br /><br /><strong>Step 2:</strong> Make the settings for your microphone and camera.<br /><br /><strong>Step 3:</strong> Click on “Next” to enter the We.Team meeting lobby.",
         "weTeamLobbyMessage": " You are now checked in and will automatically join the meeting as soon as the moderator is present and the meeting starts.<br /><br />Please be patient and stay on this page.",
-        "toggleLabel": "Enable lobby"
     },
     "localRecording": {
         "clientState": {
@@ -865,6 +874,7 @@
         "oldElectronClientDescription1": "You appear to be using an old version of the Jitsi Meet client which has known security vulnerabilities. Please make sure you update to our ",
         "oldElectronClientDescription2": "latest build",
         "oldElectronClientDescription3": " now!",
+        "openChat": "Open chat",
         "participantWantsToJoin": "Wants to join the meeting",
         "participantsWantToJoin": "Want to join the meeting",
         "passwordRemovedRemotely": "$t(lockRoomPasswordUppercase) removed by another participant",
@@ -963,6 +973,9 @@
         "by": "By {{ name }}",
         "closeButton": "Close poll",
         "create": {
+            "accessibilityLabel": {
+                "send": "Send poll"
+            },
             "addOption": "Add option",
             "answerPlaceholder": "Option {{index}}",
             "cancel": "Cancel",
@@ -971,8 +984,7 @@
             "pollQuestion": "Poll Question",
             "questionPlaceholder": "Ask a question",
             "removeOption": "Remove option",
-            "save": "Save",
-            "send": "Send"
+            "save": "Save"
         },
         "errors": {
             "notUniqueOption": "Options must be unique"
@@ -1394,6 +1406,20 @@
             "videounmute": "Start camera"
         },
         "addPeople": "Add people to your call",
+        "advancedAudioSettings": {
+            "aec": {
+                "label": "Acoustic echo cancellation"
+            },
+            "agc": {
+                "label": "Automatic gain control"
+            },
+            "ns": {
+                "label": "Noise suppression"
+            },
+            "stereo": {
+                "label": "Stereo"
+            }
+        },
         "audioOnlyOff": "Disable low bandwidth mode",
         "audioOnlyOn": "Enable low bandwidth mode",
         "audioRoute": "Select the sound device",
@@ -1434,8 +1460,8 @@
         "linkToSalesforce": "Link to Salesforce",
         "lobbyButtonDisable": "Disable lobby mode",
         "lobbyButtonEnable": "Enable lobby mode",
-        "login": "Log-in",
-        "logout": "Log-out",
+        "login": "Log In",
+        "logout": "Log Out",
         "love": "Heart",
         "lowerYourHand": "Lower your hand",
         "moreActions": "More actions",
@@ -1465,6 +1491,7 @@
         "reactionHeart": "Send heart reaction",
         "reactionLaugh": "Send laugh reaction",
         "reactionLike": "Send thumbs up reaction",
+        "reactionLove": "Send love reaction",
         "reactionSilence": "Send silence reaction",
         "reactionSurprised": "Send surprised reaction",
         "reactions": "Reactions",
@@ -1616,6 +1643,8 @@
             "noMainParticipantsTitle": "This meeting hasn't started yet.",
             "noVisitorLobby": "You cannot join while there is a lobby enabled for the meeting.",
             "notAllowedPromotion": "A participant needs to allow your request first.",
+            "requestToJoin": "Hand Raised",
+            "requestToJoinDescription": "Your request was sent to the moderators. Hang tight!",
             "title": "You are a viewer in the meeting"
         },
         "waitingMessage": "You'll join the meeting as soon as it is live!"
