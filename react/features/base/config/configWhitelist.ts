@@ -204,7 +204,6 @@ export default [
     'prejoinConfig.enabled',
     'prejoinConfig.hideDisplayName',
     'prejoinConfig.hideExtraJoinButtons',
-    'prejoinPageEnabled',
     'raisedHands',
     'recordingService',
     'requireDisplayName',

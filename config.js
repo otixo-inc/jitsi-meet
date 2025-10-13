@@ -363,6 +363,7 @@ var config = {
     // Desktop sharing
 
     // Optional desktop sharing frame rate options. Default value: min:5, max:5.
+    // Setting higher min/max values will affect the resolution, it makes it worse.
     // desktopSharingFrameRate: {
     //     min: 5,
     //     max: 5,
@@ -761,7 +762,7 @@ var config = {
     // hideDominantSpeakerBadge: false,
 
     // Default language for the user interface. Cannot be overwritten.
-    // DEPRECATED! Use the `lang` iframe option directly instead.
+    // For iframe integrations, use the `lang` option directly instead.
     // defaultLanguage: 'en',
 
     // Disables profile and the edit of all fields from the profile settings (display name and email)
@@ -791,7 +792,6 @@ var config = {
     // Configs for prejoin page.
     // prejoinConfig: {
     //     // When 'true', it shows an intermediate page before joining, where the user can configure their devices.
-    //     // This replaces `prejoinPageEnabled`. Defaults to true.
     //     enabled: true,
     //     // Hides the participant name editing field in the prejoin screen.
     //     // If requireDisplayName is also set as true, a name should still be provided through
@@ -1363,7 +1363,9 @@ var config = {
     //     disableGrantModerator: true,
     //     // If set to 'all' the 'Private chat' button will be disabled for all participants.
     //     // If set to 'allow-moderator-chat' the 'Private chat' button will be available for chats with moderators.
-    //     disablePrivateChat: 'all' | 'allow-moderator-chat',
+    //     // If set to 'disable-visitor-chat' the 'Private chat' button will be disabled for visitor-main participant
+    //     // conversations.
+    //     disablePrivateChat: 'all' | 'allow-moderator-chat' | 'disable-visitor-chat',
     // },
 
 

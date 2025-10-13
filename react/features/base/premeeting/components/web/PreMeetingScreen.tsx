@@ -10,7 +10,6 @@ import Toolbox from '../../../../toolbox/components/web/Toolbox';
 import { isButtonEnabled } from '../../../../toolbox/functions.web';
 import { getConferenceName } from '../../../conference/functions';
 import { PREMEETING_BUTTONS, THIRD_PARTY_PREJOIN_BUTTONS } from '../../../config/constants';
-import { withPixelLineHeight } from '../../../styles/functions.web';
 import Tooltip from '../../../tooltip/components/Tooltip';
 import { isPreCallTestEnabled } from '../../functions';
 
@@ -162,7 +161,7 @@ const useStyles = makeStyles()(theme => {
             width: '100%'
         },
         title: {
-            ...withPixelLineHeight(theme.typography.heading4),
+            ...theme.typography.heading4,
             color: `${theme.palette.text01}!important`,
             marginBottom: theme.spacing(3),
             textAlign: 'center',
@@ -178,7 +177,7 @@ const useStyles = makeStyles()(theme => {
         },
 
         roomName: {
-            ...withPixelLineHeight(theme.typography.heading5),
+            ...theme.typography.heading5,
             color: theme.palette.text01,
             display: 'inline-block',
             overflow: 'hidden',
