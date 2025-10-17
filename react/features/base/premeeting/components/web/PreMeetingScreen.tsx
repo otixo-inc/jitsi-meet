@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../../app/types';
+import { getLobbyConfig } from '../../../../lobby/functions';
 import DeviceStatus from '../../../../prejoin/components/web/preview/DeviceStatus';
 import { isRoomNameEnabled } from '../../../../prejoin/functions.web';
 import Toolbox from '../../../../toolbox/components/web/Toolbox';
@@ -51,6 +52,11 @@ interface IProps {
     className?: string;
 
     /**
+     * Style to apply to outer div.
+     */
+    containerStyle?: object;
+
+    /**
      * The name of the participant.
      */
     name?: string;
@@ -64,11 +70,6 @@ interface IProps {
      * Indicates whether the device status should be shown.
      */
     showDeviceStatus: boolean;
-
-    /**
-     * Style to apply to outer div
-     */
-    containerStyle?: object;
 
     /**
      * Indicates whether the device status should be shown.
@@ -131,10 +132,9 @@ const useStyles = makeStyles()(theme => {
             alignItems: 'center',
             flexShrink: 0,
             boxSizing: 'border-box',
-            margin: '0 48px',
             padding: '24px 0 16px',
             position: 'relative',
-            width: '300px',
+            width: '400px',
             height: '100%',
             zIndex: 252,
 
@@ -156,9 +156,20 @@ const useStyles = makeStyles()(theme => {
         contentControls: {
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
+            alignItems: 'stretch',
             margin: 'auto',
             width: '100%'
+        },
+        paddedContent: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '0 50px',
+
+            '& > *': {
+                width: '100%',
+                boxSizing: 'border-box'
+            }
         },
         title: {
             ...theme.typography.heading4,
@@ -226,18 +237,19 @@ const PreMeetingScreen = ({
     }, [ _roomName ]);
 
     return (
-        <div className = { clsx('premeeting-screen', classes.container, className) }
-         style={ containerStyle }
-        >
+        <div
+            className = { clsx('premeeting-screen', classes.container, className) }
+            style = { containerStyle }>
             <div style = { style }>
                 <div className = { clsx(classes.content, 'we-team-content') }>
                     {_isPreCallTestEnabled && <ConnectionStatus />}
 
                     <div className = { clsx(classes.contentControls, 'we-team-content-controls') }>
-                        <h1 className = { clsx(classes.title, "we-team-title") }>
-                            {title}
-                        </h1>
-                        {/* {_roomName && (
+                        <div className = { classes.paddedContent }>
+                            <h1 className = { clsx(classes.title, 'we-team-title') }>
+                                {title}
+                            </h1>
+                            {/* {_roomName && (
                             <span className = { classes.roomNameContainer }>
                                 {isOverflowing ? (
                                     <Tooltip content = { _roomName }>
@@ -256,19 +268,22 @@ const PreMeetingScreen = ({
                                 )}
                             </span>
                         )} */}
-                        {children}
+                            {children}
+                        </div>
                         {_buttons.length && <Toolbox toolbarButtons = { _buttons } />}
-                        {skipPrejoinButton}
-                        {showUnsafeRoomWarning && <UnsafeRoomWarning />}
-                        {showDeviceStatus && <DeviceStatus />}
-                        {showRecordingWarning && <RecordingWarning />}
+                        <div className = { classes.paddedContent }>
+                            {skipPrejoinButton}
+                            {showUnsafeRoomWarning && <UnsafeRoomWarning />}
+                            {showDeviceStatus && <DeviceStatus />}
+                            {showRecordingWarning && <RecordingWarning />}
+                        </div>
                     </div>
                 </div>
             </div>
             <Preview
+                showDeviceStatusInVideo = { showDeviceStatusInVideo }
                 videoMuted = { videoMuted }
-                videoTrack = { videoTrack } 
-                showDeviceStatusInVideo = { showDeviceStatusInVideo } />
+                videoTrack = { videoTrack } />
         </div>
     );
 };
@@ -282,11 +297,20 @@ const PreMeetingScreen = ({
  * @returns {Object}
  */
 function mapStateToProps(state: IReduxState, ownProps: Partial<IProps>) {
-    const { hiddenPremeetingButtons } = state['features/base/config'];
+    const { hiddenPremeetingButtons, prejoinConfig } = state['features/base/config'];
     const { toolbarButtons } = state['features/toolbox'];
+    const { knocking } = state['features/lobby'];
+    const { showHangUp: showHangUpLobby = true } = getLobbyConfig(state);
+    const { showHangUp: showHangUpPrejoin = true } = prejoinConfig || {};
     const premeetingButtons = (ownProps.thirdParty
         ? THIRD_PARTY_PREJOIN_BUTTONS
         : PREMEETING_BUTTONS).filter((b: any) => !(hiddenPremeetingButtons || []).includes(b));
+
+    const shouldShowHangUp = knocking ? showHangUpLobby : showHangUpPrejoin;
+
+    if (shouldShowHangUp && !premeetingButtons.includes('hangup')) {
+        premeetingButtons.push('hangup');
+    }
 
     const { premeetingBackground } = state['features/dynamic-branding'];
 

@@ -465,6 +465,7 @@ export interface IConfig {
     lobby?: {
         autoKnock?: boolean;
         enableChat?: boolean;
+        showHangUp?: boolean;
     };
     localRecording?: {
         disable?: boolean;
@@ -524,6 +525,7 @@ export interface IConfig {
         hideExtraJoinButtons?: Array<string>;
         preCallTestEnabled?: boolean;
         preCallTestICEUrl?: string;
+        showHangUp?: boolean;
     };
     raisedHands?: {
         disableLowerHandByModerator?: boolean;
@@ -653,7 +655,9 @@ export interface IConfig {
             audio?: boolean;
             video?: boolean;
         };
+        hideVisitorCountForVisitors?: boolean;
         queueService: string;
+        showJoinMeetingDialog?: boolean;
     };
     watchRTCConfigParams?: IWatchRTCConfiguration;
     webhookProxyUrl?: string;
