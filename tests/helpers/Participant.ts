@@ -60,6 +60,12 @@ export class Participant {
     private _iFrameApi: boolean = false;
 
     /**
+     * Whether the current frame is the main frame. This could coincide with the Jitsi Meet frame (when it's loaded
+     * directly), or not (when it's loaded in an iframe).
+     */
+    private _inMainFrame: boolean = true;
+
+    /**
      * The default config to use when joining.
      *
      * @private
@@ -149,9 +155,17 @@ export class Participant {
      */
     async getEndpointId(): Promise<string> {
         if (!this._endpointId) {
+            const wasInMainFrame = this._inMainFrame;
+
+            await this.switchToIFrame();
+
             this._endpointId = await this.execute(() => { // eslint-disable-line arrow-body-style
                 return APP?.conference?.getMyUserId();
             });
+
+            if (wasInMainFrame) {
+                await this.switchToMainFrame();
+            }
         }
 
         return this._endpointId;
@@ -566,6 +580,50 @@ export class Participant {
     }
 
     /**
+     * Waits for a specific participant to be displayed on large video.
+     *
+     * @param {string} expectedEndpointId - The endpoint ID of the participant expected on large video.
+     * @param {string} timeoutMsg - Optional custom timeout message.
+     * @param {number} timeout - Optional timeout in milliseconds (default: 30000).
+     * @returns {Promise<void>}
+     */
+    async waitForParticipantOnLargeVideo(
+            expectedEndpointId: string,
+            timeoutMsg?: string,
+            timeout: number = 30_000): Promise<void> {
+        await this.driver.waitUntil(
+            async () => await this.getLargeVideo().getResource() === expectedEndpointId,
+            {
+                timeout,
+                timeoutMsg: timeoutMsg || `Expected ${expectedEndpointId} on large video for ${this.name}`
+            });
+    }
+
+    /**
+     * Waits for any one of the specified participants to be displayed on large video.
+     *
+     * @param {string[]} expectedEndpointIds - Array of endpoint IDs, any one of which is expected on large video.
+     * @param {string} timeoutMsg - Optional custom timeout message.
+     * @param {number} timeout - Optional timeout in milliseconds (default: 30000).
+     * @returns {Promise<void>}
+     */
+    async waitForAnyParticipantOnLargeVideo(
+            expectedEndpointIds: string[],
+            timeoutMsg?: string,
+            timeout: number = 30_000): Promise<void> {
+        await this.driver.waitUntil(
+            async () => {
+                const largeVideoResource = await this.getLargeVideo().getResource();
+
+                return expectedEndpointIds.includes(largeVideoResource);
+            },
+            {
+                timeout,
+                timeoutMsg: timeoutMsg || `Expected one of [${expectedEndpointIds.join(', ')}] on large video for ${this.name}`
+            });
+    }
+
+    /**
      * Returns the videoQuality Dialog.
      *
      * @returns {VideoQualityDialog}
@@ -626,21 +684,31 @@ export class Participant {
     /**
      * Switches to the main frame context (outside the iFrame; where the Jitsi Meet iFrame API is available).
      *
-     * If this Participant was initialized with iFrameApi=false this has no effect, as there aren't any other contexts.
+     * If this Participant was initialized with iFrameApi=false this is a no-op.
      */
     async switchToMainFrame() {
+        if (!this._iFrameApi || this._inMainFrame) {
+            return;
+        }
+
         await this.driver.switchFrame(null);
+        this._inMainFrame = true;
     }
 
     /**
      * Switches to the iFrame context (inside the iFrame; where the Jitsi Meet application runs).
      *
-     * If this Participant was initialized with iFrameApi=false this will result in an error.
+     * If this Participant was initialized with iFrameApi=false this is a no-op.
      */
     async switchToIFrame() {
+        if (!this._iFrameApi || !this._inMainFrame) {
+            return;
+        }
+
         const iframe = this.driver.$('iframe');
 
         await this.driver.switchFrame(iframe);
+        this._inMainFrame = false;
     }
 
     /**
