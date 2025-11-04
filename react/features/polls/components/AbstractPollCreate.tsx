@@ -10,7 +10,7 @@ import { IReduxState } from '../../app/types';
 import { getLocalParticipant } from '../../base/participants/functions';
 import { savePoll } from '../actions';
 import { hasIdenticalAnswers } from '../functions';
-import { IAnswerData, IPollData } from '../types';
+import { IAnswerData, IPoll } from '../types';
 
 /**
  * The type of the React {@code Component} props of inheriting component.
@@ -26,7 +26,7 @@ type InputProps = {
 export type AbstractProps = InputProps & {
     addAnswer: (index?: number) => void;
     answers: Array<IAnswerData>;
-    editingPoll: IPollData | undefined;
+    editingPoll: IPoll | undefined;
     editingPollId: string | undefined;
     isSubmitDisabled: boolean;
     onSubmit: (event?: FormEvent<HTMLFormElement>) => void;
@@ -52,7 +52,7 @@ const AbstractPollCreate = (Component: ComponentType<AbstractProps>) => (props: 
 
     const pollState = useSelector((state: IReduxState) => state['features/polls'].polls);
 
-    const editingPoll: [ string, IPollData ] | null = useMemo(() => {
+    const editingPoll: [ string, IPoll ] | null = useMemo(() => {
         if (!pollState) {
             return null;
         }
@@ -71,10 +71,12 @@ const AbstractPollCreate = (Component: ComponentType<AbstractProps>) => (props: 
             ? editingPoll[1].answers
             : [
                 {
-                    name: ''
+                    name: '',
+                    voters: []
                 },
                 {
-                    name: ''
+                    name: '',
+                    voters: []
                 } ];
     }, [ editingPoll ]);
 
@@ -102,7 +104,8 @@ const AbstractPollCreate = (Component: ComponentType<AbstractProps>) => (props: 
         sendAnalytics(createPollEvent('option.added'));
         newAnswers.splice(typeof i === 'number'
             ? i : answers.length, 0, {
-            name: ''
+            name: '',
+            voters: []
         });
         setAnswers(newAnswers);
     }, [ answers ]);
@@ -137,7 +140,7 @@ const AbstractPollCreate = (Component: ComponentType<AbstractProps>) => (props: 
             return;
         }
 
-        dispatch(savePoll({
+        const poll = {
             changingVote: false,
             senderId: localParticipant?.id,
             showResults: false,
@@ -145,9 +148,14 @@ const AbstractPollCreate = (Component: ComponentType<AbstractProps>) => (props: 
             question,
             answers: filteredAnswers,
             saved: true,
-            editing: false,
-            pollId: editingPoll ? editingPoll[0] : pollId
-        }));
+            editing: false
+        };
+
+        if (editingPoll) {
+            dispatch(savePoll(editingPoll[0], poll));
+        } else {
+            dispatch(savePoll(pollId, poll));
+        }
 
         sendAnalytics(createPollEvent('created'));
 

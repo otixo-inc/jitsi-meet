@@ -1,7 +1,5 @@
-/**
- * TODO: move to ljm.
- */
-export interface IIncomingAnswer {
+export interface IAnswer {
+
     /**
      * An array of boolean: true if the answer was chosen by the responder, else false.
      */
@@ -13,24 +11,16 @@ export interface IIncomingAnswer {
     pollId: string;
 
     /**
-     * ID of the sender of this answer.
+     * ID of the voter for this answer.
      */
-    senderId: string;
-}
+    voterId: string;
 
-/**
- * Extension of IIncomingAnswer with UI only fields.
- */
-export interface IIncomingAnswerData extends IIncomingAnswer {
     /**
      * Name of the voter for this answer.
      */
-    voterName: string;
+    voterName?: string;
 }
 
-/**
- * TODO: move to ljm and use it from there.
- */
 export interface IPoll {
 
     /**
@@ -40,27 +30,7 @@ export interface IPoll {
     answers: Array<IAnswerData>;
 
     /**
-     * The unique ID of this poll.
-     */
-    pollId: string;
-
-    /**
-     * The question asked by this poll.
-     */
-    question: string;
-
-    /**
-     * ID of the sender of this poll.
-     */
-    senderId: string | undefined;
-}
-
-/**
- * Extension of IPoll with UI only fields.
- */
-export interface IPollData extends IPoll {
-    /**
-     * Whether the poll vote is being edited/changed. UI only, not stored on the backend.
+     * Whether the poll vote is being edited/changed.
      */
     changingVote: boolean;
 
@@ -76,35 +46,30 @@ export interface IPollData extends IPoll {
     lastVote: Array<boolean> | null;
 
     /**
-     * Whether poll is saved or not?. UI only, not stored on the backend.
+     * The question asked by this poll.
+     */
+    question: string;
+
+    /**
+     * Whether poll is saved or not?.
      */
     saved: boolean;
 
     /**
+     * ID of the sender of this poll.
+     */
+    senderId: string | undefined;
+
+    /**
      * Whether the results should be shown instead of the answer form.
-     * UI only, not stored on the backend.
      */
     showResults: boolean;
 }
 
-/**
- * TODO: move to ljm and use it from there.
- */
-export interface IVoterData {
-    /**
-     * The id of the voter.
-     */
+export interface IPollData extends IPoll {
     id: string;
-
-    /**
-     * Voter name if voter is not in the meeting.
-     */
-    name: string;
 }
 
-/**
- * TODO: move to ljm and use it from there.
- */
 export interface IAnswerData {
 
     /**
@@ -115,5 +80,5 @@ export interface IAnswerData {
     /**
      * An array of voters.
      */
-    voters?: Array<IVoterData>;
+    voters: Array<string>;
 }

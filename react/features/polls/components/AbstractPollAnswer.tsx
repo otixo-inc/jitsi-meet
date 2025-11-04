@@ -8,8 +8,9 @@ import { IReduxState } from '../../app/types';
 import { getParticipantDisplayName } from '../../base/participants/functions';
 import { useBoundSelector } from '../../base/util/hooks';
 import { registerVote, removePoll, setVoteChanging } from '../actions';
+import { COMMAND_ANSWER_POLL, COMMAND_NEW_POLL } from '../constants';
 import { getPoll } from '../functions';
-import { IPollData } from '../types';
+import { IPoll } from '../types';
 
 /**
  * The type of the React {@code Component} props of inheriting component.
@@ -26,7 +27,8 @@ type InputProps = {
 export type AbstractProps = {
     checkBoxStates: boolean[];
     creatorName: string;
-    poll: IPollData;
+    poll: IPoll;
+    pollId: string;
     sendPoll: () => void;
     setCheckbox: Function;
     setCreateMode: (mode: boolean) => void;
@@ -49,7 +51,7 @@ const AbstractPollAnswer = (Component: ComponentType<AbstractProps>) => (props: 
 
     const { conference } = useSelector((state: IReduxState) => state['features/base/conference']);
 
-    const poll: IPollData = useSelector(getPoll(pollId));
+    const poll: IPoll = useSelector(getPoll(pollId));
 
     const { answers, lastVote, question, senderId } = poll;
 
@@ -74,7 +76,11 @@ const AbstractPollAnswer = (Component: ComponentType<AbstractProps>) => (props: 
     const dispatch = useDispatch();
 
     const submitAnswer = useCallback(() => {
-        conference?.getPolls().answerPoll(pollId, checkBoxStates);
+        conference?.sendMessage({
+            type: COMMAND_ANSWER_POLL,
+            pollId,
+            answers: checkBoxStates
+        });
 
         sendAnalytics(createPollEvent('vote.sent'));
         dispatch(registerVote(pollId, checkBoxStates));
@@ -83,9 +89,14 @@ const AbstractPollAnswer = (Component: ComponentType<AbstractProps>) => (props: 
     }, [ pollId, checkBoxStates, conference ]);
 
     const sendPoll = useCallback(() => {
-        conference?.getPolls().createPoll(pollId, question, answers);
+        conference?.sendMessage({
+            type: COMMAND_NEW_POLL,
+            pollId,
+            question,
+            answers: answers.map(answer => answer.name)
+        });
 
-        dispatch(removePoll(poll));
+        dispatch(removePoll(pollId, poll));
     }, [ conference, question, answers ]);
 
     const skipAnswer = useCallback(() => {
@@ -103,6 +114,7 @@ const AbstractPollAnswer = (Component: ComponentType<AbstractProps>) => (props: 
         checkBoxStates = { checkBoxStates }
         creatorName = { participantName }
         poll = { poll }
+        pollId = { pollId }
         sendPoll = { sendPoll }
         setCheckbox = { setCheckbox }
         setCreateMode = { setCreateMode }

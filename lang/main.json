@@ -973,9 +973,6 @@
         "by": "By {{ name }}",
         "closeButton": "Close poll",
         "create": {
-            "accessibilityLabel": {
-                "send": "Send poll"
-            },
             "addOption": "Add option",
             "answerPlaceholder": "Option {{index}}",
             "cancel": "Cancel",
@@ -984,7 +981,8 @@
             "pollQuestion": "Poll Question",
             "questionPlaceholder": "Ask a question",
             "removeOption": "Remove option",
-            "save": "Save"
+            "save": "Save",
+            "send": "Send"
         },
         "errors": {
             "notUniqueOption": "Options must be unique"
