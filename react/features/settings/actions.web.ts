@@ -4,8 +4,6 @@ import { IStore } from '../app/types';
 import { setTokenAuthUrlSuccess } from '../authentication/actions.web';
 import { isTokenAuthEnabled } from '../authentication/functions';
 import {
-    setFollowMe,
-    setFollowMeRecorder,
     setStartMutedPolicy,
     setStartReactionsMuted
 } from '../base/conference/actions';
@@ -16,14 +14,18 @@ import i18next from '../base/i18n/i18next';
 import { browser } from '../base/lib-jitsi-meet';
 import { getNormalizedDisplayName } from '../base/participants/functions';
 import { updateSettings } from '../base/settings/actions';
+import { IAudioSettings } from '../base/settings/reducer';
 import { getLocalVideoTrack } from '../base/tracks/functions.web';
 import { appendURLHashParam } from '../base/util/uri';
+import { setFollowMe, setFollowMeRecorder } from '../follow-me/actions';
 import { disableKeyboardShortcuts, enableKeyboardShortcuts } from '../keyboard-shortcuts/actions';
 import { toggleBackgroundEffect } from '../virtual-background/actions';
 import virtualBackgroundLogger from '../virtual-background/logger';
 
 import {
+    SET_AUDIO_SETTINGS,
     SET_AUDIO_SETTINGS_VISIBILITY,
+    SET_PREVIEW_AUDIO_TRACK,
     SET_VIDEO_SETTINGS_VISIBILITY
 } from './actionTypes';
 import LogoutDialog from './components/web/LogoutDialog';
@@ -35,7 +37,6 @@ import {
     getProfileTabProps,
     getShortcutsTabProps
 } from './functions.web';
-
 
 /**
  * Opens {@code LogoutDialog}.
@@ -338,5 +339,37 @@ export function submitVirtualBackgroundTab(newState: any, isCancel = false) {
                         ? 'none' : newState.options.backgroundType}' applied!`);
             }
         }
+    };
+}
+
+/**
+ * Sets the audio preview track.
+ *
+ * @param {any} track - The track to set.
+ * @returns {{
+ *     type: SET_PREVIEW_AUDIO_TRACK,
+ *     track: any
+ * }}
+ */
+export function setPreviewAudioTrack(track: any) {
+    return {
+        type: SET_PREVIEW_AUDIO_TRACK,
+        track
+    };
+}
+
+/**
+ * Sets the audio settings.
+ *
+ * @param {IAudioSettings} settings - The settings to set.
+ * @returns {{
+ *     type: SET_AUDIO_SETTINGS,
+ *     settings: IAudioSettings
+ * }}
+ */
+export function setAudioSettings(settings: IAudioSettings) {
+    return {
+        type: SET_AUDIO_SETTINGS,
+        settings
     };
 }

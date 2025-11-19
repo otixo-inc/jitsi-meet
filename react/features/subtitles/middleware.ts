@@ -6,6 +6,7 @@ import { MEET_FEATURES } from '../base/jwt/constants';
 import { isJwtFeatureEnabled } from '../base/jwt/functions';
 import JitsiMeetJS from '../base/lib-jitsi-meet';
 import MiddlewareRegistry from '../base/redux/MiddlewareRegistry';
+import { showErrorNotification } from '../notifications/actions';
 import { TRANSCRIBER_JOINED } from '../transcribing/actionTypes';
 
 import {
@@ -24,7 +25,6 @@ import { notifyTranscriptionChunkReceived } from './functions';
 import { areClosedCaptionsEnabled, isCCTabEnabled } from './functions.any';
 import logger from './logger';
 import { ISubtitle, ITranscriptMessage } from './types';
-import { showErrorNotification } from '../notifications/actions';
 
 /**
  * The type of json-message which indicates that json carries a
@@ -351,7 +351,10 @@ function _requestingSubtitlesChange(
         const featureAllowed = isJwtFeatureEnabled(getState(), MEET_FEATURES.TRANSCRIPTION, false);
 
         // the default value for inviteJigasiOnBackendTranscribing is true (when undefined)
-        if (featureAllowed && (!backendRecordingOn || (transcription?.inviteJigasiOnBackendTranscribing ?? true))) {
+        const inviteJigasi = conference?.getMetadataHandler()?.getMetadata()?.asyncTranscription
+            ? (transcription?.inviteJigasiOnBackendTranscribing ?? true) : true;
+
+        if (featureAllowed && (!backendRecordingOn || inviteJigasi)) {
             conference?.dial(TRANSCRIBER_DIAL_NUMBER)
                 .catch((e: any) => {
                     logger.error('Error dialing', e);

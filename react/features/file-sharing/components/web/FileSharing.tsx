@@ -1,39 +1,24 @@
-import React, { useCallback, useState, useRef } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector, useStore } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
 import { IReduxState } from '../../../app/types';
-import Avatar from '../../../base/avatar/components/Avatar';
-import { IconCloudUpload, IconDownload, IconTrash } from '../../../base/icons/svg';
+import Icon from '../../../base/icons/components/Icon';
+import { IconCloudUpload } from '../../../base/icons/svg';
+import BaseTheme from '../../../base/ui/components/BaseTheme.web';
 import Button from '../../../base/ui/components/web/Button';
 import { BUTTON_TYPES } from '../../../base/ui/constants.web';
-import Icon from '../../../base/icons/components/Icon';
-import { withPixelLineHeight } from '../../../base/styles/functions.web';
-import BaseTheme from '../../../base/ui/components/BaseTheme.web';
 import { downloadFile, removeFile } from '../../actions';
 import {
     isFileUploadingEnabled,
-    formatFileSize,
-    formatTimestamp,
-    getFileIcon,
     processFiles
 } from '../../functions.any';
 
+import FileItem from './FileItem';
+
 const useStyles = makeStyles()(theme => {
     return {
-        buttonContainer: {
-            alignItems: 'center',
-            display: 'flex',
-            justifyContent: 'end',
-            gap: theme.spacing(2),
-            position: 'absolute',
-            top: 0,
-            right: theme.spacing(3),
-            bottom: 0,
-            left: 0
-        },
-
         container: {
             boxSizing: 'border-box',
             display: 'flex',
@@ -66,86 +51,24 @@ const useStyles = makeStyles()(theme => {
             }
         },
 
-        fileIconContainer: {
-            display: 'flex',
-            margin: 'auto'
-        },
-
-        fileItem: {
-            backgroundColor: theme.palette.ui02,
-            borderRadius: theme.shape.borderRadius,
-            display: 'flex',
-            flexDirection: 'row',
-            gap: theme.spacing(3),
-            justifyContent: 'space-between',
-            padding: theme.spacing(3),
-            position: 'relative',
-
-            '&:hover': {
-                backgroundColor: theme.palette.ui03,
-                borderRadius: theme.shape.borderRadius,
-
-                '& .actionIconVisibility': {
-                    visibility: 'visible'
-                },
-
-                '& .timestampVisibility': {
-                    visibility: 'hidden'
-                }
-            }
-        },
-
-        fileItemDetails: {
-            display: 'flex',
-            flexDirection: 'column',
-            flexGrow: 2,
-            gap: theme.spacing(1),
-            justifyContent: 'center',
-            minWidth: 0
-        },
-
         fileList: {
             display: 'flex',
             flex: 1,
             flexDirection: 'column',
             gap: theme.spacing(2),
             gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            listStyleType: 'none',
             marginBottom: theme.spacing(8),
+            marginTop: 0,
             overflowY: 'auto',
-            zIndex: 1
-        },
+            padding: 0,
+            zIndex: 1,
 
-        fileName: {
-            ...theme.typography.labelBold,
-            gap: theme.spacing(1),
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
-        },
-
-        fileAuthorParticipant: {
-            alignItems: 'center',
-            display: 'inline-flex',
-            gap: theme.spacing(1)
-        },
-
-        fileAuthorParticipantName: {
-            ...theme.typography.labelBold,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap'
-        },
-
-        fileSize: {
-            ...theme.typography.labelRegular
-        },
-
-        fileTimestamp: {
-            ...theme.typography.labelRegular,
-            display: 'flex',
-            lineHeight: '1.2rem',
-            marginTop: theme.spacing(1),
-            textAlign: 'center',
+            '& > li': {
+                listStyleType: 'none',
+                margin: 0,
+                padding: 0
+            }
         },
 
         hiddenInput: {
@@ -161,24 +84,10 @@ const useStyles = makeStyles()(theme => {
         },
 
         noFilesText: {
-            ...withPixelLineHeight(theme.typography.bodyLongBold),
+            ...theme.typography.bodyLongBold,
             color: theme.palette.text02,
             padding: '0 24px',
             textAlign: 'center'
-        },
-
-        progressBar: {
-            backgroundColor: theme.palette.ui03,
-            borderRadius: theme.shape.borderRadius,
-            height: 4,
-            overflow: 'hidden',
-            width: '100%'
-        },
-
-        progressFill: {
-            backgroundColor: theme.palette.action01,
-            height: '100%',
-            transition: 'width 0.3s ease'
         },
 
         uploadButton: {
@@ -193,12 +102,6 @@ const useStyles = makeStyles()(theme => {
 
         uploadIcon: {
             margin: '0 auto'
-        },
-
-        actionIcon: {
-            cursor: 'pointer',
-            padding: theme.spacing(1),
-            visibility: 'hidden'
         }
     };
 });
@@ -207,6 +110,7 @@ const FileSharing = () => {
     const { classes } = useStyles();
     const [ isDragging, setIsDragging ] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const uploadButtonRef = useRef<HTMLButtonElement>(null);
     const { t } = useTranslation();
     const dispatch = useDispatch();
     const store = useStore();
@@ -234,6 +138,8 @@ const FileSharing = () => {
     const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             processFiles(e.target.files as FileList, store);
+            e.target.value = ''; // Reset the input value to allow re-uploading the same file
+            uploadButtonRef.current?.focus();
         }
     }, [ processFiles ]);
 
@@ -252,11 +158,14 @@ const FileSharing = () => {
     }, []);
 
     const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (e.key === 'Enter' || e.key === ' ') {
             fileInputRef.current?.click();
         }
     }, []);
 
+    /* eslint-disable react/jsx-no-bind */
     return (
         <div className = { classes.container }>
             {
@@ -269,19 +178,15 @@ const FileSharing = () => {
                             onDragEnter = { handleDragEnter }
                             onDragLeave = { handleDragLeave }
                             onDragOver = { handleDragOver }
-                            onDrop = { handleDrop }
-                            role = 'button'
-                            tabIndex = { 0 }>
-                            <input
-                                className = { classes.hiddenInput }
-                                multiple = { true }
-                                onChange = { handleFileSelect }
-                                ref = { fileInputRef }
-                                type = 'file' />
-                        </div>
+                            onDrop = { handleDrop } />
                         {
                             sortedFiles.length === 0 && (
-                                <div className = { classes.noFilesContainer }>
+                                <div
+                                    className = { classes.noFilesContainer }
+                                    onClick = { handleClick }
+                                    onKeyUp = { handleKeyPress }
+                                    role = 'button'
+                                    tabIndex = { 0 }>
                                     <Icon
                                         className = { classes.uploadIcon }
                                         color = { BaseTheme.palette.icon03 }
@@ -293,87 +198,31 @@ const FileSharing = () => {
                                 </div>
                             )
                         }
+                        <input
+                            className = { classes.hiddenInput }
+                            multiple = { true }
+                            onChange = { handleFileSelect }
+                            ref = { fileInputRef }
+                            tabIndex = { -1 }
+                            type = 'file' />
                     </>
                 )
             }
             {
                 sortedFiles.length > 0 && (
-                    <div className = { classes.fileList }>
+                    <ul className = { classes.fileList }>
                         {
                             sortedFiles.map(file => (
-                                <div
-                                    className = { classes.fileItem }
-                                    key = { file.fileId }
-                                    title = { file.fileName }>
-                                    {
-                                        (file.progress ?? 100) === 100 && (
-                                            <>
-                                                <div className = { classes.fileIconContainer }>
-                                                    <Icon
-                                                        color = { BaseTheme.palette.icon01 }
-                                                        size = { 64 }
-                                                        src = { getFileIcon(file.fileType) } />
-                                                </div>
-                                                <div className = { classes.fileItemDetails }>
-                                                    <div className = { classes.fileName }>
-                                                        { file.fileName }
-                                                    </div>
-                                                    <div className = { classes.fileSize }>
-                                                        { formatFileSize(file.fileSize) }
-                                                    </div>
-                                                    <div className = { classes.fileAuthorParticipant }>
-                                                        <Avatar
-                                                            displayName = { file.authorParticipantName }
-                                                            participantId = { file.authorParticipantId }
-                                                            size = { 16 } />
-                                                        <div className = { classes.fileAuthorParticipantName }>
-                                                            { file.authorParticipantName }
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div className = { `${classes.fileTimestamp} timestampVisibility` }>
-                                                    <pre>
-                                                        { formatTimestamp(file.timestamp) }
-                                                    </pre>
-                                                </div>
-                                                <div className = { classes.buttonContainer }>
-                                                    <Icon
-                                                        className = { `${classes.actionIcon} actionIconVisibility` }
-                                                        color = { BaseTheme.palette.icon01 }
-
-                                                        // eslint-disable-next-line react/jsx-no-bind
-                                                        onClick = { () => dispatch(downloadFile(file.fileId)) }
-                                                        size = { 24 }
-                                                        src = { IconDownload } />
-                                                    {
-                                                        isUploadEnabled && (
-                                                            <Icon
-                                                                className = { `${classes.actionIcon} actionIconVisibility` }
-                                                                color = { BaseTheme.palette.icon01 }
-
-                                                                // eslint-disable-next-line react/jsx-no-bind
-                                                                onClick = { () => dispatch(removeFile(file.fileId)) }
-                                                                size = { 24 }
-                                                                src = { IconTrash } />
-                                                        )
-                                                    }
-                                                </div>
-                                            </>
-                                        )
-                                    }
-                                    {
-                                        (file.progress ?? 100) < 100 && (
-                                            <div className = { classes.progressBar }>
-                                                <div
-                                                    className = { classes.progressFill }
-                                                    style = {{ width: `${file.progress}%` }} />
-                                            </div>
-                                        )
-                                    }
-                                </div>
+                                <li key = { file.fileId }>
+                                    <FileItem
+                                        file = { file }
+                                        onDownload = { fileId => dispatch(downloadFile(fileId)) }
+                                        onRemove = { fileId => dispatch(removeFile(fileId)) }
+                                        showRemoveButton = { isUploadEnabled } />
+                                </li>
                             ))
                         }
-                    </div>
+                    </ul>
                 )
             }
             {
@@ -384,6 +233,7 @@ const FileSharing = () => {
                         labelKey = { 'fileSharing.uploadFile' }
                         onClick = { handleClick }
                         onKeyPress = { handleKeyPress }
+                        ref = { uploadButtonRef }
                         type = { BUTTON_TYPES.PRIMARY } />
                 )
             }

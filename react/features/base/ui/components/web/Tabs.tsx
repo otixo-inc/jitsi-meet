@@ -3,7 +3,6 @@ import { makeStyles } from 'tss-react/mui';
 
 import { isMobileBrowser } from '../../../environment/utils';
 import Icon from '../../../icons/components/Icon';
-import { withPixelLineHeight } from '../../../styles/functions.web';
 
 interface ITabProps {
     accessibilityLabel: string;
@@ -18,6 +17,7 @@ interface ITabProps {
         icon?: Function;
         id: string;
         label?: string;
+        title?: string;
     }>;
 }
 
@@ -28,7 +28,7 @@ const useStyles = makeStyles()(theme => {
         },
 
         tab: {
-            ...withPixelLineHeight(theme.typography.bodyShortBold),
+            ...theme.typography.bodyShortBold,
             color: theme.palette.text02,
             flex: 1,
             padding: '14px',
@@ -65,17 +65,22 @@ const useStyles = makeStyles()(theme => {
             },
 
             '&.is-mobile': {
-                ...withPixelLineHeight(theme.typography.bodyShortBoldLarge)
+                ...theme.typography.bodyShortBoldLarge
             }
         },
 
         badge: {
-            ...withPixelLineHeight(theme.typography.labelBold),
-            color: theme.palette.text04,
-            padding: `0 ${theme.spacing(1)}`,
-            borderRadius: '100%',
+            ...theme.typography.labelBold,
+            alignItems: 'center',
             backgroundColor: theme.palette.warning01,
-            marginLeft: theme.spacing(2)
+            borderRadius: theme.spacing(2),
+            color: theme.palette.text04,
+            display: 'inline-flex',
+            height: theme.spacing(3),
+            justifyContent: 'center',
+            marginLeft: theme.spacing(2),
+            minWidth: theme.spacing(2),
+            padding: `0 ${theme.spacing(1)}`
         },
 
         icon: {
@@ -127,26 +132,34 @@ const Tabs = ({
             aria-label = { accessibilityLabel }
             className = { cx(classes.container, className) }
             role = 'tablist'>
-            {tabs.map((tab, index) => (
-                <button
-                    aria-controls = { tab.controlsId }
-                    aria-label = { tab.accessibilityLabel }
-                    aria-selected = { selected === tab.id }
-                    className = { cx(classes.tab, selected === tab.id && 'selected', isMobile && 'is-mobile') }
-                    disabled = { tab.disabled }
-                    id = { tab.id }
-                    key = { tab.id }
-                    onClick = { onClick(tab.id) }
-                    onKeyDown = { onKeyDown(index) }
-                    role = 'tab'
-                    tabIndex = { selected === tab.id ? undefined : -1 }>
-                    {tab.icon && <Icon
-                        className = { classes.icon }
-                        src = { tab.icon } />}
-                    {tab.label}
-                    {tab.countBadge && <span className = { classes.badge }>{tab.countBadge}</span>}
-                </button>
-            ))}
+            {
+                tabs.map((tab, index) => (
+                    <button
+                        aria-controls = { tab.controlsId }
+                        aria-label = { tab.accessibilityLabel }
+                        aria-selected = { selected === tab.id }
+                        className = { cx(classes.tab, selected === tab.id && 'selected', isMobile && 'is-mobile') }
+                        disabled = { tab.disabled }
+                        id = { tab.id }
+                        key = { tab.id }
+                        onClick = { onClick(tab.id) }
+                        onKeyDown = { onKeyDown(index) }
+                        role = 'tab'
+                        tabIndex = { selected === tab.id ? undefined : -1 }
+                        title = { tab.title }>
+                        {
+                            tab.icon && <Icon
+                                className = { classes.icon }
+                                src = { tab.icon } />
+                        }
+                        { tab.label }
+                        {
+                            tab.countBadge && <span className = { classes.badge }>
+                                { tab.countBadge }
+                            </span>
+                        }
+                    </button>
+                ))}
         </div>
     );
 };
