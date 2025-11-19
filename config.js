@@ -117,6 +117,11 @@ var config = {
 
         // Will replace ice candidates IPs with invalid ones in order to fail ice.
         // failICE: true,
+
+        // When running on Spot TV, this controls whether to show the recording consent dialog.
+        // If false (default), Spot instances will not show the recording consent dialog.
+        // If true, Spot instances will show the recording consent dialog like regular clients.
+        // showSpotConsentDialog: false,
     },
 
     // Disables moderator indicators.
@@ -358,6 +363,7 @@ var config = {
     // Desktop sharing
 
     // Optional desktop sharing frame rate options. Default value: min:5, max:5.
+    // Setting higher min/max values will affect the resolution, it makes it worse.
     // desktopSharingFrameRate: {
     //     min: 5,
     //     max: 5,
@@ -511,7 +517,8 @@ var config = {
     //     // Note: Starting transcriptions from the recording dialog will still work.
     //     disableClosedCaptions: false,
 
-    //     // Whether to invite jigasi when backend transcriptions are enabled. By default, we invite it.
+    //     // Whether to invite jigasi when backend transcriptions are enabled (asyncTranscription is true in metadata).
+    //     // By default, we invite it.
     //     inviteJigasiOnBackendTranscribing: true,
     // },
 
@@ -716,6 +723,8 @@ var config = {
     //     autoKnock: false,
     //     // Enables the lobby chat. Replaces `enableLobbyChat`.
     //     enableChat: true,
+    //     // Shows the hangup button in the lobby screen.
+    //     showHangUp: true,
     // },
 
     // Configs for the security related UI elements.
@@ -755,7 +764,7 @@ var config = {
     // hideDominantSpeakerBadge: false,
 
     // Default language for the user interface. Cannot be overwritten.
-    // DEPRECATED! Use the `lang` iframe option directly instead.
+    // For iframe integrations, use the `lang` option directly instead.
     // defaultLanguage: 'en',
 
     // Disables profile and the edit of all fields from the profile settings (display name and email)
@@ -785,7 +794,6 @@ var config = {
     // Configs for prejoin page.
     // prejoinConfig: {
     //     // When 'true', it shows an intermediate page before joining, where the user can configure their devices.
-    //     // This replaces `prejoinPageEnabled`. Defaults to true.
     //     enabled: true,
     //     // Hides the participant name editing field in the prejoin screen.
     //     // If requireDisplayName is also set as true, a name should still be provided through
@@ -797,7 +805,9 @@ var config = {
     //     // By setting preCallTestEnabled, you enable the pre-call test in the prejoin page.
     //     // ICE server credentials need to be provided over the preCallTestICEUrl
     //     preCallTestEnabled: false,
-    //     preCallTestICEUrl: ''
+    //     preCallTestICEUrl: '',
+    //     // Shows the hangup button in the lobby screen.
+    //     showHangUp: true,
     // },
 
     // When 'true', the user cannot edit the display name.
@@ -1125,10 +1135,6 @@ var config = {
         // The Amplitude APP Key:
         // amplitudeAPPKey: '<APP_KEY>',
 
-        // Enables Amplitude UTM tracking:
-        // Default value is false.
-        // amplitudeIncludeUTM: false,
-
         // Obfuscates room name sent to analytics (amplitude, rtcstats)
         // Default value is false.
         // obfuscateRoomName: false,
@@ -1359,18 +1365,13 @@ var config = {
     //     disableKick: true,
     //     // If set to true the 'Grant moderator' button will be disabled.
     //     disableGrantModerator: true,
-    //     // If set to true the 'Send private message' button will be disabled.
-    //     disablePrivateChat: true,
+    //     // If set to 'all' the 'Private chat' button will be disabled for all participants.
+    //     // If set to 'allow-moderator-chat' the 'Private chat' button will be available for chats with moderators.
+    //     // If set to 'disable-visitor-chat' the 'Private chat' button will be disabled for visitor-main participant
+    //     // conversations.
+    //     disablePrivateChat: 'all' | 'allow-moderator-chat' | 'disable-visitor-chat',
     // },
 
-    // Endpoint that enables support for salesforce integration with in-meeting resource linking
-    // This is required for:
-    // listing the most recent records - salesforceUrl/records/recents
-    // searching records - salesforceUrl/records?text=${text}
-    // retrieving record details - salesforceUrl/records/${id}?type=${type}
-    // and linking the meeting - salesforceUrl/sessions/${sessionId}/records/${id}
-    //
-    // salesforceUrl: 'https://api.example.com/',
 
     // If set to true all muting operations of remote participants will be disabled.
     // disableRemoteMute: true,
@@ -1395,6 +1396,13 @@ var config = {
         logoClickUrl: 'https://example-company.org',
         // The url used for the image used as logo
         logoImageUrl: 'https://example.com/logo-img.png',
+        // Endpoint that enables support for salesforce integration with in-meeting resource linking
+        // This is required for:
+        // listing the most recent records - salesforceUrl/records/recents
+        // searching records - salesforceUrl/records?text=${text}
+        // retrieving record details - salesforceUrl/records/${id}?type=${type}
+        // and linking the meeting - salesforceUrl/sessions/${sessionId}/records/${id}
+        // salesforceUrl: 'https://api.example.com/',
         // Overwrite for pool of background images for avatars
         avatarBackgrounds: ['url(https://example.com/avatar-background-1.png)', '#FFF'],
         // The lobby/prejoin screen background
@@ -1599,6 +1607,10 @@ var config = {
     //         audio: true,
     //         video: true
     //     },
+    //     // Hides the visitor count for visitors.
+    //     // hideVisitorCountForVisitors: false,
+    //     // Whether to show the join meeting dialog when joining as a visitor.
+    //     // showJoinMeetingDialog: true,
     // },
     // The default type of desktop sharing sources that will be used in the electron app.
     // desktopSharingSources: ['screen', 'window'],
@@ -1778,6 +1790,13 @@ var config = {
     //     // The minimum number of participants that must be in the call for
     //     // the top panel layout to be used.
     //     minParticipantCountForTopPanel: 50,
+
+    //     // The width of the filmstrip on joining meeting. Can be resized afterwards.
+    //     initialWidth: 400,
+
+    //     // Whether the draggable resize bar of the filmstrip is always visible. Setting this to true will make
+    //     // the filmstrip always visible in case `disableResizable` is false.
+    //     alwaysShowResizeBar: true,
     // },
 
     // Tile view related config options.
