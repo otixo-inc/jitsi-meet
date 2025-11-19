@@ -185,6 +185,15 @@ function _setConfig(state: IConfig, { config }: { config: IConfig; }) {
         });
     }
 
+    const { alwaysShowResizeBar, disableResizable } = config.filmstrip || {};
+
+    if (alwaysShowResizeBar && disableResizable) {
+        config.filmstrip = {
+            ...config.filmstrip,
+            alwaysShowResizeBar: false
+        };
+    }
+
     const newState = merge(
         {},
         config,
@@ -394,13 +403,6 @@ function _translateLegacyConfig(oldValue: IConfig) {
         && !newValue.welcomePage.hasOwnProperty('disabled')
     ) {
         newValue.welcomePage.disabled = !oldValue.enableWelcomePage;
-    }
-
-    newValue.prejoinConfig = oldValue.prejoinConfig || {};
-    if (oldValue.hasOwnProperty('prejoinPageEnabled')
-        && !newValue.prejoinConfig.hasOwnProperty('enabled')
-    ) {
-        newValue.prejoinConfig.enabled = oldValue.prejoinPageEnabled;
     }
 
     newValue.disabledSounds = newValue.disabledSounds || [];

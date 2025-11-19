@@ -1,18 +1,12 @@
 -- This module implements a generic metadata storage system for rooms.
 --
--- VirtualHost "jitmeet.example.com"
---     modules_enabled = {
---         "room_metadata"
---     }
---     room_metadata_component = "metadata.jitmeet.example.com"
---     main_muc = "conference.jitmeet.example.com"
---
 -- Component "metadata.jitmeet.example.com" "room_metadata_component"
 --      muc_component = "conference.jitmeet.example.com"
 --      breakout_rooms_component = "breakout.jitmeet.example.com"
+local array = require 'util.array';
 local filters = require 'util.filters';
 local jid_node = require 'util.jid'.node;
-local json = require 'cjson.safe';
+local json = require 'util.json';
 local st = require 'util.stanza';
 local jid = require 'util.jid';
 
@@ -25,6 +19,7 @@ local internal_room_jid_match_rewrite = util.internal_room_jid_match_rewrite;
 local process_host_module = util.process_host_module;
 local table_shallow_copy = util.table_shallow_copy;
 local table_add = util.table_add;
+local table_equals = util.table_equals;
 
 local MUC_NS = 'http://jabber.org/protocol/muc';
 local COMPONENT_IDENTITY_TYPE = 'room_metadata';
@@ -37,9 +32,9 @@ if muc_component_host == nil then
     return;
 end
 
-local muc_domain_base = module:get_option_string('muc_mapper_domain_base');
-if not muc_domain_base then
-    module:log('warn', 'No muc_domain_base option set.');
+local main_virtual_host = module:get_option_string('muc_mapper_domain_base');
+if not main_virtual_host then
+    module:log('warn', 'No muc_mapper_domain_base option set.');
     return;
 end
 
@@ -67,9 +62,7 @@ function getMetadataJSON(room, metadata)
     return res;
 end
 
-function broadcastMetadata(room)
-    local json_msg = getMetadataJSON(room);
-
+function broadcastMetadata(room, json_msg)
     if not json_msg then
         return;
     end
@@ -85,24 +78,27 @@ function send_metadata(occupant, room, json_msg)
 
         -- we want to send the main meeting participants only to jicofo
         if is_admin(occupant.bare_jid) then
-            local participants = {};
+            local participants;
+            local moderators = array();
 
-            if room._data.mainMeetingParticipants then
-                table_add(participants, room._data.mainMeetingParticipants);
+            if room._data.participants then
+                participants = array();
+                participants:append(room._data.participants);
             end
 
             if room._data.moderator_id then
-                table.insert(participants, room._data.moderator_id);
+                moderators:push(room._data.moderator_id);
             end
 
             if room._data.moderators then
-                table_add(participants, room._data.moderators);
+                moderators:append(room._data.moderators);
             end
 
-            if #participants > 0 then
-                metadata_to_send = table_shallow_copy(metadata_to_send);
-                metadata_to_send.mainMeetingParticipants = participants;
-            end
+            metadata_to_send = table_shallow_copy(metadata_to_send);
+            metadata_to_send.participants = participants;
+            metadata_to_send.moderators = moderators;
+
+            module:log('info', 'Sending metadata to jicofo room=%s,meeting_id=%s', room.jid, room._data.meetingId);
         end
 
         json_msg = getMetadataJSON(room, metadata_to_send);
@@ -182,7 +178,7 @@ function on_message(event)
 
     if occupant.role ~= 'moderator' then
         -- will return a non nil filtered data to use, if it is nil, it is not allowed
-        local res = module:context(muc_domain_base):fire_event('jitsi-metadata-allow-moderation',
+        local res = module:context(main_virtual_host):fire_event('jitsi-metadata-allow-moderation',
                 { room = room; actor = occupant; key = jsonData.key ; data = jsonData.data; session = session; });
 
         if not res then
@@ -193,12 +189,16 @@ function on_message(event)
         jsonData.data = res;
     end
 
-    room.jitsiMetadata[jsonData.key] = jsonData.data;
+    local old_value = room.jitsiMetadata[jsonData.key];
+    if not table_equals(old_value, jsonData.data) then
+        room.jitsiMetadata[jsonData.key] = jsonData.data;
 
-    broadcastMetadata(room);
+        module:log('info', 'Мetadata key "%s" updated by %s in room:%s,meeting_id:%s', jsonData.key, from, room.jid, room._data.meetingId);
+        broadcastMetadata(room, getMetadataJSON(room));
 
-    -- fire and event for the change
-    main_muc_module:fire_event('jitsi-metadata-updated', { room = room; actor = occupant; key = jsonData.key; });
+        -- fire and event for the change
+        main_muc_module:fire_event('jitsi-metadata-updated', { room = room; actor = occupant; key = jsonData.key; });
+    end
 
     return true;
 end
@@ -219,7 +219,11 @@ function process_main_muc_loaded(main_muc, host_module)
 
     -- The room metadata was updated internally (from another module).
     host_module:hook("room-metadata-changed", function(event)
-        broadcastMetadata(event.room);
+        local room = event.room;
+        local json_msg = getMetadataJSON(room);
+
+        module:log('info', 'Metadata changed internally in room:%s,meeting_id:%s - broadcasting data:%s', room.jid, room._data.meetingId, json_msg);
+        broadcastMetadata(room, json_msg);
     end);
 
     -- TODO: Once clients update to read/write metadata for startMuted policy we can drop this
@@ -243,12 +247,35 @@ function process_main_muc_loaded(main_muc, host_module)
 
         local startMutedMetadata = room.jitsiMetadata.startMuted or {};
 
-        startMutedMetadata.audio = startMuted.attr.audio == 'true';
-        startMutedMetadata.video = startMuted.attr.video == 'true';
+        local audioNewValue = startMuted.attr.audio == 'true';
+        local videoNewValue = startMuted.attr.video == 'true';
+        local send_update = false;
 
-        room.jitsiMetadata.startMuted = startMutedMetadata;
+        if startMutedMetadata.audio ~= audioNewValue then
+            startMutedMetadata.audio = audioNewValue;
+            send_update = true;
+        end
+        if startMutedMetadata.video ~= videoNewValue then
+            startMutedMetadata.video = videoNewValue;
+            send_update = true;
+        end
 
-        host_module:fire_event('room-metadata-changed', { room = room; });
+        if send_update then
+            room.jitsiMetadata.startMuted = startMutedMetadata;
+
+            host_module:fire_event('room-metadata-changed', { room = room; });
+        end
+    end);
+
+    -- The the connection jid for authenticated users (like jicofo) stays the same,
+    -- so leaving and re-joining will result not sending metatadata again.
+    -- Make sure we clear the sent_initial_metadata entry for the occupant on leave.
+    host_module:hook("muc-occupant-left", function(event)
+        local room, occupant = event.room, event.occupant;
+
+        if room.sent_initial_metadata then
+            room.sent_initial_metadata[jid.bare(event.occupant.jid)] = nil;
+        end
     end);
 end
 
@@ -295,8 +322,7 @@ end
 
 -- Send a message update for metadata before sending the first self presence
 function filter_stanza(stanza, session)
-    if not stanza.attr or not stanza.attr.to or stanza.name ~= 'presence'
-        or stanza.attr.type == 'unavailable' or ends_with(stanza.attr.from, '/focus') then
+    if not stanza.attr or not stanza.attr.to or stanza.name ~= 'presence' or stanza.attr.type == 'unavailable' then
         return stanza;
     end
 
@@ -342,3 +368,9 @@ end
 
 -- enable filtering presences
 filters.add_filter_hook(filter_session);
+
+process_host_module(main_virtual_host, function(host_module)
+    module:context(host_module.host):fire_event('jitsi-add-identity', {
+        name = 'room_metadata'; host = module.host;
+    });
+end);

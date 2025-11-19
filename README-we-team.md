@@ -109,3 +109,11 @@ git merge stable/jitsi-meet_10314
 Our forked repo should now be up to date with the original repository and still include our custom changes.
 
 We don't rebase because we would need to resolve the same conflicts every time we pull from the original repository.
+
+# Troubleshooting
+
+## r.xxx is not a function
+
+> Delete node-modules folder and try again … It is some caching of old lib-jitsi-meet
+
+https://community.jitsi.org/t/solved-r-getbreakoutrooms-is-not-a-function/108404/2
