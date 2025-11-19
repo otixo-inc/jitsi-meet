@@ -1,10 +1,10 @@
+import { CONFERENCE_PROPERTIES_CHANGED } from '../base/conference/actionTypes';
 import ReducerRegistry from '../base/redux/ReducerRegistry';
 
 import {
     TRANSCRIBER_JOINED,
     TRANSCRIBER_LEFT
 } from './actionTypes';
-import { CONFERENCE_PROPERTIES_CHANGED } from '../base/conference/actionTypes';
 
 /**
  * Returns initial state for transcribing feature part of Redux store.
@@ -46,13 +46,17 @@ ReducerRegistry.register<ITranscribingState>('features/transcribing',
     (state = _getInitialState(), action): ITranscribingState => {
         switch (action.type) {
         case CONFERENCE_PROPERTIES_CHANGED: {
-            const audioRecordingEnabled = action.properties?.['audio-recording-enabled'] === 'true';
+            const audioRecording = action.properties?.['audio-recording-enabled'];
 
-            if (state.isTranscribing !== audioRecordingEnabled) {
-                return {
-                    ...state,
-                    isTranscribing: audioRecordingEnabled
-                };
+            if (typeof audioRecording !== 'undefined') {
+                const audioRecordingEnabled = audioRecording === 'true';
+
+                if (state.isTranscribing !== audioRecordingEnabled) {
+                    return {
+                        ...state,
+                        isTranscribing: audioRecordingEnabled
+                    };
+                }
             }
 
             return state;

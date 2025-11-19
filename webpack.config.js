@@ -64,34 +64,41 @@ function getBundleAnalyzerPlugin(analyzeBundle, name) {
  */
 function devServerProxyBypass({ path }) {
     /**
-     * We want to return out local version of 
+     * We want to return out local version of
      * external_api.js instead of the version hosted
      * on the server.
-     * 
-     * This way we can locally test any changes we make 
+     *
+     * This way we can locally test any changes we make
      * https://github.com/jitsi/jitsi-meet/issues/6964#issuecomment-1771442496
      */
     if (path === '/external_api.js') {
-      return '/libs/external_api.js';
+        return '/libs/external_api.js';
     }
-    if (path.startsWith('/css/')
-            || path.startsWith('/doc/')
-            || path.startsWith('/fonts/')
-            || path.startsWith('/images/')
-            || path.startsWith('/lang/')
-            || path.startsWith('/sounds/')
-            || path.startsWith('/static/')
-            || path.endsWith('.wasm')) {
+    let tpath = path;
 
-        return path;
+    if (tpath.startsWith('/v1/_cdn/')) {
+        // The CDN is not available in the dev server, so we need to bypass it.
+        tpath = tpath.replace(/\/v1\/_cdn\/[^/]+\//, '/');
     }
 
-    if (path.startsWith('/libs/')) {
-        if (path.endsWith('.min.js') && !fs.existsSync(join(process.cwd(), path))) {
-            return path.replace('.min.js', '.js');
+    if (tpath.startsWith('/css/')
+            || tpath.startsWith('/doc/')
+            || tpath.startsWith('/fonts/')
+            || tpath.startsWith('/images/')
+            || tpath.startsWith('/lang/')
+            || tpath.startsWith('/sounds/')
+            || tpath.startsWith('/static/')
+            || tpath.endsWith('.wasm')) {
+
+        return tpath;
+    }
+
+    if (tpath.startsWith('/libs/')) {
+        if (tpath.endsWith('.min.js') && !fs.existsSync(join(process.cwd(), tpath))) {
+            return tpath.replace('.min.js', '.js');
         }
 
-        return path;
+        return tpath;
     }
 }
 
