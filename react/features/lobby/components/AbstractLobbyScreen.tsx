@@ -473,7 +473,7 @@ export function _mapStateToProps(state: IReduxState) {
         _knocking: knocking,
         _lobbyChatMessages: messages,
         _lobbyMessageRecipient: lobbyMessageRecipient?.name,
-        _login: showModeratorLogin,
+        _login: showModeratorLogin && !state['features/base/jwt'].jwt,
         _hangUp: showHangUp,
         _isLobbyChatActive: isLobbyChatActive,
         _meetingName: getConferenceName(state),
