@@ -89,6 +89,7 @@ export const NATIVE_THRESHOLDS = [
  * buttons.
  */
 export const MAIN_TOOLBAR_BUTTONS_PRIORITY = [
+    'we-team-invite-members',
     'microphone',
     'camera',
     'desktop',
