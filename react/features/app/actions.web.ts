@@ -155,6 +155,8 @@ export function maybeRedirectToWelcomePage(options: { feedbackSubmitted?: boolea
                     dispatch(redirectWithStoredParams('/'));
                 },
                 options.showThankYou ? 3000 : 500);
+        } else {
+            window.location.assign('https://we.team/call-beendet');
         }
     };
 }
