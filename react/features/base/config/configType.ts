@@ -84,7 +84,8 @@ export type Sounds = 'ASKED_TO_UNMUTE_SOUND' |
     'REACTION_SOUND' |
     'RECORDING_OFF_SOUND' |
     'RECORDING_ON_SOUND' |
-    'TALK_WHILE_MUTED_SOUND';
+    'TALK_WHILE_MUTED_SOUND' |
+    'LOBBY_MUSIC_SOUND';
 
 export interface IDeeplinkingPlatformConfig {
     appName: string;
@@ -422,8 +423,8 @@ export interface IConfig {
     hideEmailInSettings?: boolean;
     hideLobbyButton?: boolean;
     hideLoginButton?: boolean;
-    hidePasswordInLobby?: boolean;
     hideParticipantsStats?: boolean;
+    hidePasswordInLobby?: boolean;
     hideRecordingLabel?: boolean;
     hosts?: {
         anonymousdomain?: string;
