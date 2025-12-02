@@ -322,7 +322,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                     labelKey = 'lobby.enterPasswordButton'
                     onClick = { this._onSwitchToPasswordMode }
                     testId = 'lobby.enterPasswordButton'
-                    type = { BUTTON_TYPES.SECONDARY } />
+                    type = { BUTTON_TYPES.PRIMARY } />
                 }
                 {_login && <Button
                     className = 'lobby-button-margin'
