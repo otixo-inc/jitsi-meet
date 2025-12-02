@@ -5,7 +5,7 @@ import { conferenceWillJoin } from '../../base/conference/actions';
 import { getConferenceName } from '../../base/conference/functions';
 import { IJitsiConference } from '../../base/conference/reducer';
 import { getSecurityUiConfig } from '../../base/config/functions.any';
-import { INVITE_ENABLED } from '../../base/flags/constants';
+import { HIDE_PASSWORD_IN_LOBBY, INVITE_ENABLED } from '../../base/flags/constants';
 import { getFeatureFlag } from '../../base/flags/functions';
 import { getLocalParticipant } from '../../base/participants/functions';
 import { getFieldValue } from '../../base/react/functions';
@@ -121,6 +121,11 @@ interface IState {
     isChatOpen: boolean;
 
     /**
+     * The state of the lobby music.
+     */
+    lobbyMusicPlaying: boolean;
+
+    /**
      * The password value entered into the field.
      */
     password: string;
@@ -134,11 +139,6 @@ interface IState {
      * The state of the screen. One of {@code SCREEN_STATES[*]}.
      */
     screenState: number;
-
-    /**
-     * The state of the lobby music
-     */
-    lobbyMusicPlaying: boolean;
 }
 
 /**
@@ -445,6 +445,7 @@ export function _mapStateToProps(state: IReduxState) {
     const localParticipant = getLocalParticipant(state);
     const participantId = localParticipant?.id;
     const inviteEnabledFlag = getFeatureFlag(state, INVITE_ENABLED, true);
+    const hidePasswordInLobbyFlag = getFeatureFlag(state, HIDE_PASSWORD_IN_LOBBY, false);
     const { disableInviteFunctions, hidePasswordInLobby } = state['features/base/config'];
     const { isDisplayNameRequiredError, knocking, passwordJoinFailed } = state['features/lobby'];
     const { iAmSipGateway } = state['features/base/config'];
@@ -453,6 +454,8 @@ export function _mapStateToProps(state: IReduxState) {
     const deviceStatusVisible = isDeviceStatusVisible(state);
     const { membersOnly, lobbyWaitingForHost } = state['features/base/conference'];
     const { isLobbyChatActive, lobbyMessageRecipient, messages } = state['features/chat'];
+
+    const hidePasswordInLobbyFinal = hidePasswordInLobby || hidePasswordInLobbyFlag;
 
     return {
         _deviceStatusVisible: deviceStatusVisible,
@@ -467,7 +470,7 @@ export function _mapStateToProps(state: IReduxState) {
         _participantId: participantId,
         _participantName: localParticipant?.name,
         _passwordJoinFailed: passwordJoinFailed,
-        _renderPassword: !iAmSipGateway && !disableLobbyPassword && !lobbyWaitingForHost && !hidePasswordInLobby,
+        _renderPassword: !iAmSipGateway && !disableLobbyPassword && !lobbyWaitingForHost && !hidePasswordInLobbyFinal,
         showCopyUrlButton
     };
 }
