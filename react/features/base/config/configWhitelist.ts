@@ -177,6 +177,7 @@ export default [
     'iAmSpot',
     'ignoreStartMuted',
     'inviteAppName',
+    'isUserStartingTheMeeting',
     'liveStreaming.enabled',
     'liveStreamingEnabled',
     'lobby',

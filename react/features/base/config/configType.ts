@@ -426,8 +426,8 @@ export interface IConfig {
     hideEmailInSettings?: boolean;
     hideLobbyButton?: boolean;
     hideLoginButton?: boolean;
-    hidePasswordInLobby?: boolean;
     hideParticipantsStats?: boolean;
+    hidePasswordInLobby?: boolean;
     hideRecordingLabel?: boolean;
     hosts?: {
         anonymousdomain?: string;
@@ -444,6 +444,7 @@ export interface IConfig {
     inviteAppName?: string | null;
     inviteServiceCallFlowsUrl?: string;
     inviteServiceUrl?: string;
+    isUserStartingTheMeeting?: boolean;
     jaasActuatorUrl?: string;
     jaasConferenceCreatorUrl?: string;
     jaasFeedbackMetadataURL?: string;
