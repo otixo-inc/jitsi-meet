@@ -295,4 +295,4 @@ export const HIDE_PASSWORD_IN_LOBBY = 'lobby.hidePasswordInLobby';
  * Flag indicating if the user started the meeting
  * Default: disabled (false).
  */
-export const IS_USER_MEETING_INITIALIZER = 'isUserStartingTheMeeting';
+export const IS_USER_MEETING_INITIALIZER = 'prejoinpage.isUserStartingTheMeeting';

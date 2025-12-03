@@ -53,7 +53,6 @@ interface IProps {
      */
     isDisplayNameVisible: boolean;
 
-    isUserStartingTheMeeting: boolean;
 
     /**
      * Joins the current meeting.
@@ -230,7 +229,7 @@ const Prejoin = ({
     unsafeRoomConsent,
     updateSettings: dispatchUpdateSettings,
     videoTrack,
-    isUserStartingTheMeeting
+
 }: IProps) => {
     const showDisplayNameField = useMemo(
         () => isDisplayNameVisible && !readOnlyName,
@@ -403,7 +402,7 @@ const Prejoin = ({
     }
     const hasExtraJoinButtons = Boolean(extraButtonsToRender.length);
 
-    const joinButtonLabel = isUserStartingTheMeeting ? 'prejoin.startMeeting' : 'prejoin.joinMeeting';
+    const joinButtonLabel = prejoinConfig?.isUserStartingTheMeeting ? 'prejoin.startMeeting' : 'prejoin.joinMeeting';
 
     return (
         <PreMeetingScreen
@@ -507,7 +506,6 @@ function mapStateToProps(state: IReduxState) {
     const { room } = state['features/base/conference'];
     const { unsafeRoomConsent } = state['features/base/premeeting'];
     const { showPrejoinWarning: showRecordingWarning } = state['features/base/config'].recordings ?? {};
-    const { isUserStartingTheMeeting } = state['features/base/config'];
 
     return {
         deviceStatusVisible: isDeviceStatusVisible(state),
@@ -525,7 +523,6 @@ function mapStateToProps(state: IReduxState) {
         showUnsafeRoomWarning: isInsecureRoomName(room) && isUnsafeRoomWarningEnabled(state),
         unsafeRoomConsent,
         videoTrack: getLocalJitsiVideoTrack(state),
-        isUserStartingTheMeeting
     };
 }
 

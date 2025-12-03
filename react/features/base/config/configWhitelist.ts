@@ -204,6 +204,7 @@ export default [
     'preferBosh',
     'preferVisitor',
     'prejoinConfig.enabled',
+    'prejoinConfig.isUserStartingTheMeeting',
     'prejoinConfig.hideDisplayName',
     'prejoinConfig.hideExtraJoinButtons',
     'raisedHands',

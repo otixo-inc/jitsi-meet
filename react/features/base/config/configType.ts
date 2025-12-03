@@ -444,7 +444,6 @@ export interface IConfig {
     inviteAppName?: string | null;
     inviteServiceCallFlowsUrl?: string;
     inviteServiceUrl?: string;
-    isUserStartingTheMeeting?: boolean;
     jaasActuatorUrl?: string;
     jaasConferenceCreatorUrl?: string;
     jaasFeedbackMetadataURL?: string;
@@ -524,6 +523,7 @@ export interface IConfig {
         enabled?: boolean;
         hideDisplayName?: boolean;
         hideExtraJoinButtons?: Array<string>;
+        isUserStartingTheMeeting?: boolean;
         preCallTestEnabled?: boolean;
         preCallTestICEUrl?: string;
         showHangUp?: boolean;
