@@ -1,3 +1,39 @@
+/* lato-regular - latin */
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 400;
+  src: local(''), url('../fonts/lato-v23-latin-regular.woff2') format('woff2');
+}
+/* lato-italic - latin */
+@font-face {
+  font-family: 'Lato';
+  font-style: italic;
+  font-weight: 400;
+  src: local(''), url('../fonts/lato-v23-latin-italic.woff2') format('woff2');
+}
+/* lato-700 - latin */
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 700;
+  src: local(''), url('../fonts/lato-v23-latin-700.woff2') format('woff2');
+}
+/* lato-700italic - latin */
+@font-face {
+  font-family: 'Lato';
+  font-style: italic;
+  font-weight: 700;
+  src: local(''), url('../fonts/lato-v23-latin-700italic.woff2') format('woff2');
+}
+/* lato-900 - latin */
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 900;
+  src: local(''), url('../fonts/lato-v23-latin-900.woff2') format('woff2');
+}
+
 /**
  * Safari will limit input in input elements to one character when user-select
  * none is applied. Other browsers already support selecting within inputs while
