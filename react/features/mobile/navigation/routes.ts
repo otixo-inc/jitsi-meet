@@ -30,7 +30,7 @@ export const screen = {
     preJoin: 'Pre-Join',
     lobby: {
         chat: 'Lobby chat',
-        main: 'Lobby',
+        main: 'We.Team Meet',
         root: 'Lobby root'
     },
     settings: {

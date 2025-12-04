@@ -54,8 +54,7 @@ export function isDisplayNameRequired(state: IReduxState): boolean {
  * @returns {boolean}
  */
 export function isPrejoinEnabledInConfig(state: IReduxState): boolean {
-    return false;
-    // return state['features/base/config'].prejoinConfig?.enabled ?? true;
+    return state['features/base/config'].prejoinConfig?.enabled ?? true;
 }
 
 /**

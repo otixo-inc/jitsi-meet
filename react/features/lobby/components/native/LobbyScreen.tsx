@@ -119,15 +119,15 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
     _renderJoining() {
         return (
             <View style = { styles.lobbyWaitingFragmentContainer }>
-                <Text style = { styles.lobbyTitle }>
+                {/* <Text style = { styles.lobbyTitle }>
                     { this.props.t('lobby.joiningTitle') }
+                </Text> */}
+                <Text style = { styles.joiningMessage as TextStyle }>
+                    { this.props.t('lobby.weTeamLobbyMessage') }
                 </Text>
                 <LoadingIndicator
                     color = { BaseTheme.palette.icon01 }
                     style = { styles.loadingIndicator } />
-                <Text style = { styles.joiningMessage as TextStyle }>
-                    { this.props.t('lobby.joiningMessage') }
-                </Text>
                 { this._renderStandardButtons() }
             </View>
         );
