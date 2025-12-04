@@ -33,17 +33,17 @@ For test releases, instead of re-creating the entire infrastructure stack we can
 
 Find the jitsi server in AWS e.g. `jitsi-meet-server-test` and copy the connection string:
 
-e.g. `ssh -i "otxSL1.pem" ubuntu@ec2-3-235-151-226.compute-1.amazonaws.com`
+e.g. `ssh -i "otxSL1.pem" ubuntu@ec2-100-31-195-9.compute-1.amazonaws.com`
 
 Copy the package to the server:
 
 ```
-scp -i otxSL1.pem jitsi-meet.tar.bz2 ubuntu@ec2-3-235-151-226.compute-1.amazonaws.com:/home/ubuntu
+scp -i otxSL1.pem /Users/jamie/Documents/GitHub/jitsi-meet/jitsi-meet.tar.bz2 ubuntu@ec2-100-31-195-9.compute-1.amazonaws.com:/home/ubuntu
 ```
 
 Connect to the server:
 
-`ssh -i "otxSL1.pem" ubuntu@ec2-3-235-151-226.compute-1.amazonaws.com`
+`ssh -i "otxSL1.pem" ubuntu@ec2-100-31-195-9.compute-1.amazonaws.com`
 
 ```sh
 # move our package to /tmp
@@ -55,7 +55,9 @@ rm jitsi-meet-weteam.deb weteamweb/ -rf
 
 Run the lines from the following file to install our package:
 
-https://github.com/otixo-inc/Infrastructure/blob/d93b774b1f2e968cc4d13463ed079493fc49c303/jitsi-aws/assets/userdata/jms.sh#L47-L59
+https://github.com/otixo-inc/jitsi-infrastructure/blob/main/assets/userdata/jms.sh#L51-L63
+
+*Note: Replace {{JITSI_MEET_WEB_VERSION}} with whichever version of Jitsi we are installing*
 
 Restart the server:
 

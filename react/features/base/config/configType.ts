@@ -422,8 +422,8 @@ export interface IConfig {
     hideEmailInSettings?: boolean;
     hideLobbyButton?: boolean;
     hideLoginButton?: boolean;
-    hidePasswordInLobby?: boolean;
     hideParticipantsStats?: boolean;
+    hidePasswordInLobby?: boolean;
     hideRecordingLabel?: boolean;
     hosts?: {
         anonymousdomain?: string;
@@ -518,6 +518,7 @@ export interface IConfig {
         enabled?: boolean;
         hideDisplayName?: boolean;
         hideExtraJoinButtons?: Array<string>;
+        isUserStartingTheMeeting?: boolean;
         preCallTestEnabled?: boolean;
         preCallTestICEUrl?: string;
     };
