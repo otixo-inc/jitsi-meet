@@ -124,8 +124,21 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
 
         return (
             <span className = 'we-team-lobby-title-container'>
-                <span className = 'we-team-lobby-title'>
-                    {t(_knocking ? 'lobby.weTeamLobbyTitle' : 'lobby.weTeamCheckInTitle')}
+                <div className = 'we-team-lobby-logo'>
+                    <img
+                        height = { 50 }
+                        src = 'images/WeTeam-Logo-Icon.svg' />
+                    <span className = 'we-team-lobby-title'>
+                        {t(_knocking ? 'lobby.weTeamLobbyTitle' : 'lobby.weTeamCheckInTitle')}
+                    </span>
+                </div>
+                <span className = { _knocking ? 'we-team-lobby-message' : 'we-team-checkin-message' }>
+                    {
+                        translateToHTML(
+                        t,
+                        _knocking ? 'lobby.weTeamLobbyMessage' : 'lobby.weTeamCheckInMessage'
+                        )
+                    }
                 </span>
             </span>
         );
@@ -144,14 +157,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                 {_isLobbyChatActive
                     ? this._renderLobbyChat()
                     : (
-                        <span className = 'we-team-lobby-message'>
-                            {
-                                translateToHTML(
-                                t,
-                                'lobby.weTeamLobbyMessage'
-                                )
-                            }
-                        </span>
+                        <></>
                     )
                 }
                 { this._renderStandardButtons() }
@@ -212,14 +218,6 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
 
         return (
             <>
-                <span className = 'we-team-checkin-message'>
-                    {
-                        translateToHTML(
-                      t,
-                      'lobby.weTeamCheckInMessage'
-                        )
-                    }
-                </span>
                 <Input
                     autoFocus = { true }
                     className = 'lobby-prejoin-input'
@@ -272,15 +270,15 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
         return (
             <>
                 <Button
-                    className = 'lobby-button-margin'
-                    fullWidth = { true }
+                    className = 'lobby-button-margin lobby-button-width'
+                    fullWidth = { false }
                     labelKey = 'prejoin.joinMeeting'
                     onClick = { this._onJoinWithPassword }
                     testId = 'lobby.passwordJoinButton'
                     type = { BUTTON_TYPES.PRIMARY } />
                 <Button
-                    className = 'lobby-button-margin'
-                    fullWidth = { true }
+                    className = 'lobby-button-margin lobby-button-width'
+                    fullWidth = { false }
                     labelKey = 'lobby.backToKnockModeButton'
                     onClick = { this._onSwitchToKnockMode }
                     testId = 'lobby.backToKnockModeButton'
@@ -300,33 +298,33 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
         return (
             <>
                 {_knocking || <Button
-                    className = 'lobby-button-margin'
+                    className = 'lobby-button-margin lobby-button-width'
                     disabled = { !this.state.displayName }
-                    fullWidth = { true }
+                    fullWidth = { false }
                     labelKey = 'lobby.knockButton'
                     onClick = { this._onAskToJoin }
                     testId = 'lobby.knockButton'
                     type = 'primary' />
                 }
                 {(_knocking && _isLobbyChatActive) && <Button
-                    className = 'lobby-button-margin open-chat-button'
-                    fullWidth = { true }
+                    className = 'lobby-button-margin lobby-button-width open-chat-button'
+                    fullWidth = { false }
                     labelKey = 'toolbar.openChat'
                     onClick = { this._onToggleChat }
                     testId = 'toolbar.openChat'
                     type = 'primary' />
                 }
-                {_renderPassword && <Button
-                    className = 'lobby-button-margin'
-                    fullWidth = { true }
+                {_renderPassword && _knocking && <Button
+                    className = 'lobby-button-margin lobby-button-width'
+                    fullWidth = { false }
                     labelKey = 'lobby.enterPasswordButton'
                     onClick = { this._onSwitchToPasswordMode }
                     testId = 'lobby.enterPasswordButton'
                     type = { BUTTON_TYPES.PRIMARY } />
                 }
                 {_login && <Button
-                    className = 'lobby-button-margin'
-                    fullWidth = { true }
+                    className = 'lobby-button-margin lobby-button-width'
+                    fullWidth = { false }
                     labelKey = 'dialog.IamHost'
                     onClick = { this._onLogin }
                     testId = 'lobby.loginButton'

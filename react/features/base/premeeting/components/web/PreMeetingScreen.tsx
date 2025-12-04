@@ -167,7 +167,7 @@ const useStyles = makeStyles()(theme => {
             padding: '0 50px',
 
             '& > *': {
-                width: '100%',
+                // width: '100%',
                 boxSizing: 'border-box'
             }
         },
@@ -245,7 +245,7 @@ const PreMeetingScreen = ({
                     {_isPreCallTestEnabled && <ConnectionStatus />}
 
                     <div className = { clsx(classes.contentControls, 'we-team-content-controls') }>
-                        <div className = { classes.paddedContent }>
+                        <div className = { clsx(classes.paddedContent, 'we-team-padded-content') }>
                             <h1 className = { clsx(classes.title, 'we-team-title') }>
                                 {title}
                             </h1>
