@@ -40,19 +40,22 @@ import { hasDisplayName } from '../../utils';
 import JoinByPhoneDialog from './dialogs/JoinByPhoneDialog';
 
 interface IProps {
+
+    showDeviceStatusInVideo?: boolean;
     /**
      * Flag signaling if the device status is visible or not.
      */
     deviceStatusVisible: boolean;
+
     /**
      * If join by phone button should be visible.
      */
     hasJoinByPhoneButton: boolean;
+
     /**
      * Flag signaling if the display name is visible or not.
      */
     isDisplayNameVisible: boolean;
-
 
     /**
      * Joins the current meeting.
@@ -98,8 +101,6 @@ interface IProps {
      * Flag signaling the visibility of camera preview.
      */
     showCameraPreview: boolean;
-
-    showDeviceStatusInVideo?: boolean;
 
     /**
      * If 'JoinByPhoneDialog' is visible or not.
@@ -228,8 +229,7 @@ const Prejoin = ({
     showUnsafeRoomWarning,
     unsafeRoomConsent,
     updateSettings: dispatchUpdateSettings,
-    videoTrack,
-
+    videoTrack
 }: IProps) => {
     const showDisplayNameField = useMemo(
         () => isDisplayNameVisible && !readOnlyName,
@@ -402,8 +402,6 @@ const Prejoin = ({
     }
     const hasExtraJoinButtons = Boolean(extraButtonsToRender.length);
 
-    const joinButtonLabel = prejoinConfig?.isUserStartingTheMeeting ? 'prejoin.startMeeting' : 'prejoin.joinMeeting';
-
     return (
         <PreMeetingScreen
             showDeviceStatus = { deviceStatusVisible }
@@ -465,7 +463,7 @@ const Prejoin = ({
                         <ActionButton
                             OptionsIcon = { showJoinByPhoneButtons ? IconArrowUp : IconArrowDown }
                             ariaDropDownLabel = { t('prejoin.joinWithoutAudio') }
-                            ariaLabel = { t(joinButtonLabel) }
+                            ariaLabel = { t('prejoin.joinMeeting') }
                             ariaPressed = { showJoinByPhoneButtons }
                             disabled = { joiningInProgress
                                 || (showUnsafeRoomWarning && !unsafeRoomConsent)
@@ -477,7 +475,7 @@ const Prejoin = ({
                             tabIndex = { 0 }
                             testId = 'prejoin.joinMeeting'
                             type = 'primary'>
-                            {t(joinButtonLabel)}
+                            {t('prejoin.joinMeeting')}
                         </ActionButton>
                     </Popover>
                 </div>
@@ -522,7 +520,7 @@ function mapStateToProps(state: IReduxState) {
         showRecordingWarning: Boolean(showRecordingWarning),
         showUnsafeRoomWarning: isInsecureRoomName(room) && isUnsafeRoomWarningEnabled(state),
         unsafeRoomConsent,
-        videoTrack: getLocalJitsiVideoTrack(state),
+        videoTrack: getLocalJitsiVideoTrack(state)
     };
 }
 
