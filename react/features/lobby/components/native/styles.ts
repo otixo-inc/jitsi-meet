@@ -42,7 +42,7 @@ export default {
     },
 
     loadingIndicator: {
-        marginBottom: BaseTheme.spacing[3]
+        marginTop: BaseTheme.spacing[3]
     },
 
     // KnockingParticipantList

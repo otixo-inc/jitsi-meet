@@ -15,7 +15,7 @@ import AbstractLobbyScreen, {
     _mapStateToProps
 } from '../AbstractLobbyScreen';
 
-import './LobbyScreen.css'
+import './LobbyScreen.css';
 
 /**
  * Implements a waiting screen that represents the participant being in the lobby.
@@ -27,7 +27,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      */
     _messageContainerRef: React.RefObject<MessageContainer>;
     /**
-     * Reference to the audio element for playing lobby muic
+     * Reference to the audio element for playing lobby muic.
      */
     _lobbyMusicRef: React.RefObject<HTMLAudioElement>;
 
@@ -51,7 +51,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
        */
     override componentDidMount() {
         this._scrollMessageContainerToBottom(true);
-        this._playLobbyMusic()
+        this._playLobbyMusic();
     }
 
     /**
@@ -76,48 +76,67 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
         const { _deviceStatusVisible, showCopyUrlButton, t } = this.props;
 
         return (
-          <>
-            <PreMeetingScreen
-                className = 'lobby-screen'
-                containerStyle={{
-                  backgroundImage: "url(/images/lobby-bg-sm.jpeg)"
-                }}
-                showCopyUrlButton = { showCopyUrlButton }
-                showDeviceStatus = { false }
-                showDeviceStatusInVideo= { _deviceStatusVisible }
-                title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
-                <audio src="sounds/lobby.mp3" loop ref={this._lobbyMusicRef} />
-                {this._renderWeTeamTitle()}
-                { this._renderContent() }
-            </PreMeetingScreen>
-          </>
+            <>
+                <PreMeetingScreen
+                    className = 'lobby-screen'
+                    containerStyle = {{
+                        backgroundImage: 'url(/images/lobby-bg-sm.jpeg)'
+                    }}
+                    showCopyUrlButton = { showCopyUrlButton }
+                    showDeviceStatus = { false }
+                    showDeviceStatusInVideo = { _deviceStatusVisible }
+                    title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
+                    <audio
+                        loop = { true }
+                        ref = { this._lobbyMusicRef }
+                        src = 'sounds/lobby.mp3' />
+                    {this._renderWeTeamTitle()}
+                    { this._renderContent() }
+                </PreMeetingScreen>
+            </>
         );
     }
-    _playLobbyMusic(){
-      const play = () => {
-        this._lobbyMusicRef.current?.play().catch(e => {
-          /*
+
+    _playLobbyMusic() {
+        const play = () => {
+            this._lobbyMusicRef.current?.play().catch(e => {
+                /*
             https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#audiovideo_elements
             If the browser prevents playback because the user has not interacted with the document.
             Try to play the sound again in 1 second. Keep trying until it succeeds or the invitation ends.
           */
-          setTimeout(play, 1000);
-        });
-      };
-      play();
+                setTimeout(play, 1000);
+            });
+        };
+
+        play();
     }
 
     _renderWeTeamTitle() {
-      const { t, _knocking } = this.props;
-      return (
-        <span className='we-team-lobby-title-container'>
-          <span className='we-team-lobby-title'>
-            {t(_knocking ? 'lobby.weTeamLobbyTitle': 'lobby.weTeamCheckInTitle')}
+        const { t, _knocking } = this.props;
+
+        return (
+            <span className = 'we-team-lobby-title-container'>
+                <div className = 'we-team-lobby-logo'>
+                    <img
+                        height = { 50 }
+                        src = 'images/WeTeam-Logo-Icon.svg' />
+                    <span className = 'we-team-lobby-title'>
+                        {t(_knocking ? 'lobby.weTeamLobbyTitle' : 'lobby.weTeamCheckInTitle')}
+                    </span>
+                </div>
+                <span className = { _knocking ? 'we-team-lobby-message' : 'we-team-checkin-message' }>
+                    {
+                        translateToHTML(
+                        t,
+                        _knocking ? 'lobby.weTeamLobbyMessage' : 'lobby.weTeamCheckInMessage'
+                        )
+                    }
+                </span>
             </span>
-        </span>
-      )
+        );
     }
-    
+
     /**
      * Renders the joining (waiting) fragment of the screen.
      *
@@ -131,14 +150,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                 {_isLobbyChatActive
                     ? this._renderLobbyChat()
                     : (
-                        <span className = 'we-team-lobby-message'>
-                          { 
-                            translateToHTML(
-                              t,
-                              'lobby.weTeamLobbyMessage'
-                            )
-                          }
-                        </span>
+                        <></>
                     )
                 }
                 { this._renderStandardButtons() }
@@ -199,14 +211,6 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
 
         return (
             <>
-                <span className = 'we-team-checkin-message'>
-                  { 
-                    translateToHTML(
-                      t,
-                      'lobby.weTeamCheckInMessage'
-                    )
-                  }
-                </span>
                 <Input
                     autoFocus = { true }
                     className = 'lobby-prejoin-input'
@@ -259,15 +263,15 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
         return (
             <>
                 <Button
-                    className = 'lobby-button-margin'
-                    fullWidth = { true }
+                    className = 'lobby-button-margin lobby-button-width'
+                    fullWidth = { false }
                     labelKey = 'prejoin.joinMeeting'
                     onClick = { this._onJoinWithPassword }
                     testId = 'lobby.passwordJoinButton'
                     type = 'primary' />
                 <Button
-                    className = 'lobby-button-margin'
-                    fullWidth = { true }
+                    className = 'lobby-button-margin lobby-button-width'
+                    fullWidth = { false }
                     labelKey = 'lobby.backToKnockModeButton'
                     onClick = { this._onSwitchToKnockMode }
                     testId = 'lobby.backToKnockModeButton'
@@ -287,29 +291,29 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
         return (
             <>
                 {_knocking || <Button
-                    className = 'lobby-button-margin'
+                    className = 'lobby-button-margin lobby-button-width'
                     disabled = { !this.state.displayName }
-                    fullWidth = { true }
+                    fullWidth = { false }
                     labelKey = 'lobby.knockButton'
                     onClick = { this._onAskToJoin }
                     testId = 'lobby.knockButton'
                     type = 'primary' />
                 }
                 {(_knocking && _isLobbyChatActive) && <Button
-                    className = 'lobby-button-margin open-chat-button'
-                    fullWidth = { true }
+                    className = 'lobby-button-margin lobby-button-width open-chat-button'
+                    fullWidth = { false }
                     labelKey = 'toolbar.openChat'
                     onClick = { this._onToggleChat }
                     testId = 'toolbar.openChat'
                     type = 'primary' />
                 }
-                {_renderPassword && <Button
-                    className = 'lobby-button-margin'
-                    fullWidth = { true }
+                {_renderPassword && _knocking && <Button
+                    className = 'lobby-button-margin lobby-button-width'
+                    fullWidth = { false }
                     labelKey = 'lobby.enterPasswordButton'
                     onClick = { this._onSwitchToPasswordMode }
                     testId = 'lobby.enterPasswordButton'
-                    type = 'secondary' />
+                    type = 'primary' />
                 }
             </>
         );
