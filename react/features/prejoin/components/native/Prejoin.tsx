@@ -19,7 +19,7 @@ import { setAudioOnly } from '../../../base/audio-only/actions';
 import { getConferenceName } from '../../../base/conference/functions';
 import { isNameReadOnly } from '../../../base/config/functions.any';
 import { connect } from '../../../base/connection/actions.native';
-import { PREJOIN_PAGE_HIDE_DISPLAY_NAME } from '../../../base/flags/constants';
+import { IS_USER_MEETING_INITIALIZER, PREJOIN_PAGE_HIDE_DISPLAY_NAME } from '../../../base/flags/constants';
 import { getFeatureFlag } from '../../../base/flags/functions';
 import { IconCloseLarge } from '../../../base/icons/svg';
 import JitsiScreen from '../../../base/modal/components/JitsiScreen';
@@ -56,6 +56,8 @@ const Prejoin: React.FC<IPrejoinProps> = ({ navigation }: IPrejoinProps) => {
     const isDisplayNameMandatory = useSelector((state: IReduxState) => isDisplayNameRequired(state));
     const isDisplayNameVisible
         = useSelector((state: IReduxState) => !getFeatureFlag(state, PREJOIN_PAGE_HIDE_DISPLAY_NAME, false));
+    const isUserStartingTheMeeting
+        = useSelector((state: IReduxState) => getFeatureFlag(state, IS_USER_MEETING_INITIALIZER, false));
     const isDisplayNameReadonly = useSelector(isNameReadOnly);
     const roomName = useSelector((state: IReduxState) => getConferenceName(state));
     const roomNameEnabled = useSelector((state: IReduxState) => isRoomNameEnabled(state));
@@ -138,7 +140,7 @@ const Prejoin: React.FC<IPrejoinProps> = ({ navigation }: IPrejoinProps) => {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerLeft,
-            headerTitle: t('prejoin.joinMeeting')
+            headerTitle: t(isUserStartingTheMeeting ? 'prejoin.startMeeting' : 'prejoin.joinMeeting')
         });
     }, [ navigation ]);
 
@@ -155,6 +157,7 @@ const Prejoin: React.FC<IPrejoinProps> = ({ navigation }: IPrejoinProps) => {
         contentContainerStyles = styles.contentContainerWide;
         largeVideoContainerStyles = styles.largeVideoContainerWide;
     }
+    const joinButtonLabel = isUserStartingTheMeeting ? 'prejoin.startMeeting' : 'prejoin.joinMeeting';
 
     return (
         <JitsiScreen
@@ -205,9 +208,9 @@ const Prejoin: React.FC<IPrejoinProps> = ({ navigation }: IPrejoinProps) => {
                     )
                 }
                 <Button
-                    accessibilityLabel = 'prejoin.joinMeeting'
+                    accessibilityLabel = { joinButtonLabel }
                     disabled = { showDisplayNameError }
-                    labelKey = 'prejoin.joinMeeting'
+                    labelKey = { joinButtonLabel }
                     onClick = { maybeJoin }
                     style = { styles.joinButton }
                     type = { PRIMARY } />
