@@ -172,23 +172,6 @@
   padding: 2px;
 }
 
-@media (min-width: 1001px) {
-.lobby-screen-content .lobby-chat-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 700px;
-    height: 70%;
-  }
-.lobby-screen-content .lobby-chat-container.hidden {
-  display: none;
-  }
-  .lobby-screen-content .open-chat-button {
-    display: initial;
-  }
-}
-
 .lobby-screen .we-team-padded-content {
   padding: 0px;
 }

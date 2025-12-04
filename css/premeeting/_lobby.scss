@@ -22,7 +22,7 @@
             margin-bottom: 16px;
             border-radius: 5px;
             .lobby-chat-header {
-                // display: none;
+                display: none;
             }
         }
 
@@ -166,23 +166,6 @@
     }
 }
 
-.lobby-chat-header {
-    display: flex;
-    flex-direction: row;
-    padding-top: 20px;
-    padding-left: 16px;
-    padding-right: 16px;
-
-    .title {
-        flex: 1;
-        color: #fff;
-        font-size: 1.25rem;
-        font-weight: 600;
-        line-height: 1.75rem;
-        letter-spacing: -1.2%;
-    }
-}
-
 @media (max-width: 1000px) {
     .lobby-screen-content {
 
@@ -198,6 +181,22 @@
                 display: none;
             }
 
+            .lobby-chat-header {
+                display: flex;
+                flex-direction: row;
+                padding-top: 20px;
+                padding-left: 16px;
+                padding-right: 16px;
+
+                .title {
+                    flex: 1;
+                    color: #fff;
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    line-height: 1.75rem;
+                    letter-spacing: -1.2%;
+                }
+            }
         }
 
         .open-chat-button {
