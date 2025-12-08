@@ -84,7 +84,8 @@ export type Sounds = 'ASKED_TO_UNMUTE_SOUND' |
     'REACTION_SOUND' |
     'RECORDING_OFF_SOUND' |
     'RECORDING_ON_SOUND' |
-    'TALK_WHILE_MUTED_SOUND';
+    'TALK_WHILE_MUTED_SOUND' |
+    'LOBBY_MUSIC_SOUND';
 
 export interface IDeeplinkingPlatformConfig {
     appName: string;

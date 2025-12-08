@@ -3,3 +3,4 @@
  * participant enters lobby.
  */
 export const KNOCKING_PARTICIPANT_FILE = 'knock.mp3';
+export const LOBBY_MUSIC_FILE = 'lobby.mp3';
