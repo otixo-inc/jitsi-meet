@@ -29,9 +29,11 @@ make && make source-package
 
 ### Copy build to the server manually
 
-For test releases, instead of re-creating the entire infrastructure stack we can copy and install `jitsi-meet.tar.bz2` on the test jitsi server.
+N.b This will only work if the version of jitsi-meet has not changed. If it has changed follow the instructions to create a new jitsi stack in AWS here: https://github.com/otixo-inc/jitsi-infrastructure?tab=readme-ov-file#create-a-stack
 
-Find the jitsi server in AWS e.g. `jitsi-meet-server-test` and copy the connection string:
+For dev releases, instead of re-creating the entire infrastructure stack we can copy and install `jitsi-meet.tar.bz2` on the dev jitsi server.
+
+Find the jitsi server in AWS e.g. `jitsi-meet-server-dev` and copy the connection string:
 
 e.g. `ssh -i "otxSL1.pem" ubuntu@ec2-100-31-195-9.compute-1.amazonaws.com`
 
@@ -46,23 +48,7 @@ Connect to the server:
 `ssh -i "otxSL1.pem" ubuntu@ec2-100-31-195-9.compute-1.amazonaws.com`
 
 ```sh
-# move our package to /tmp
-mv jitsi-meet.tar.bz2 /tmp
-cd /tmp
-# remove the previous installation
-rm jitsi-meet-weteam.deb weteamweb/ -rf
-```
-
-Run the lines from the following file to install our package:
-
-https://github.com/otixo-inc/jitsi-infrastructure/blob/main/assets/userdata/jms.sh#L51-L63
-
-*Note: Replace {{JITSI_MEET_WEB_VERSION}} with whichever version of Jitsi we are installing*
-
-Restart the server:
-
-```
-/etc/init.d/jicofo restart ; /etc/init.d/prosody restart ; /etc/init.d/nginx restart
+sudo tar -xf jitsi-meet.tar.bz2 -C /usr/share
 ```
 
 The server is now running the package built from our source code. 
@@ -85,7 +71,7 @@ Visit https://github.com/otixo-inc/jitsi-meet/releases and create a new release 
 
 Follow the instructions here to create a new jitsi stack in AWS with latest package:
 
-https://github.com/otixo-inc/Infrastructure/blob/master/jitsi-aws/README.md#create-a-stack
+https://github.com/otixo-inc/jitsi-infrastructure?tab=readme-ov-file#create-a-stack
 
 ## Synching our fork with the Jitsi origin
 
