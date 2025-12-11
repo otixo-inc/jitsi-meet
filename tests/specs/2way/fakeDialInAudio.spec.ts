@@ -1,5 +1,6 @@
 import process from 'node:process';
 
+import { expectations } from '../../helpers/expectations';
 import { ensureOneParticipant, ensureTwoParticipants } from '../../helpers/participants';
 import { cleanup, isDialInEnabled, waitForAudioFromDialInParticipant } from '../helpers/DialIn';
 
@@ -9,16 +10,22 @@ describe('Fake Dial-In', () => {
 
         // check rest url is not configured
         if (process.env.DIAL_IN_REST_URL) {
-            ctx.skipSuiteTests = true;
+            ctx.skipSuiteTests = 'DIAL_IN_REST_URL is not set';
 
             return;
         }
 
-        await ensureOneParticipant(ctx);
+        await ensureOneParticipant();
+
+        const configEnabled = await isDialInEnabled(ctx.p1);
+
+        if (expectations.dialIn.enabled !== null) {
+            expect(configEnabled).toBe(expectations.dialIn.enabled);
+        }
 
         // check dial-in is enabled, so skip
-        if (await isDialInEnabled(ctx.p1)) {
-            ctx.skipSuiteTests = true;
+        if (configEnabled) {
+            ctx.skipSuiteTests = 'DIAL_IN_REST_URL is not set.';
         }
     });
 
@@ -34,7 +41,7 @@ describe('Fake Dial-In', () => {
             return;
         }
 
-        await ensureTwoParticipants(ctx);
+        await ensureTwoParticipants();
     });
 
     it('wait for audio from second participant', async () => {

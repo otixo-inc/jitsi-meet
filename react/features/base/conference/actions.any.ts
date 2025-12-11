@@ -58,8 +58,6 @@ import {
     P2P_STATUS_CHANGED,
     SEND_TONES,
     SET_ASSUMED_BANDWIDTH_BPS,
-    SET_FOLLOW_ME,
-    SET_FOLLOW_ME_RECORDER,
     SET_OBFUSCATED_ROOM,
     SET_PASSWORD,
     SET_PASSWORD_FAILED,
@@ -83,7 +81,8 @@ import {
     getConferenceState,
     getCurrentConference,
     getVisitorOptions,
-    sendLocalParticipant
+    sendLocalParticipant,
+    updateTrackMuteState
 } from './functions';
 import logger from './logger';
 import { IConferenceMetadata, IJitsiConference } from './reducer';
@@ -186,6 +185,15 @@ function _addConferenceListeners(conference: IJitsiConference, dispatch: IStore[
         (disableVideoMuteChange: boolean) => {
             dispatch(setVideoUnmutePermissions(disableVideoMuteChange));
         });
+    conference.on(
+        JitsiConferenceEvents.START_MUTED_POLICY_CHANGED,
+        ({ audio, video }: { audio: boolean; video: boolean; }) => {
+            dispatch(onStartMutedPolicyChanged(audio, video));
+
+            updateTrackMuteState(state, dispatch, true);
+            updateTrackMuteState(state, dispatch, false);
+        }
+    );
 
     // Dispatches into features/base/tracks follow:
 
@@ -844,38 +852,6 @@ export function sendTones(tones: string, duration: number, pause: number) {
 }
 
 /**
- * Enables or disables the Follow Me feature.
- *
- * @param {boolean} enabled - Whether or not Follow Me should be enabled.
- * @returns {{
- *     type: SET_FOLLOW_ME,
- *     enabled: boolean
- * }}
- */
-export function setFollowMe(enabled: boolean) {
-    return {
-        type: SET_FOLLOW_ME,
-        enabled
-    };
-}
-
-/**
- * Enables or disables the Follow Me feature used only for the recorder.
- *
- * @param {boolean} enabled - Whether Follow Me should be enabled and used only by the recorder.
- * @returns {{
- *     type: SET_FOLLOW_ME_RECORDER,
- *     enabled: boolean
- * }}
- */
-export function setFollowMeRecorder(enabled: boolean) {
-    return {
-        type: SET_FOLLOW_ME_RECORDER,
-        enabled
-    };
-}
-
-/**
  * Enables or disables the Mute reaction sounds feature.
  *
  * @param {boolean} muted - Whether or not reaction sounds should be muted for all participants.
@@ -1013,6 +989,8 @@ export function setStartMutedPolicy(
             audio: startAudioMuted,
             video: startVideoMuted
         });
+
+        dispatch(onStartMutedPolicyChanged(startAudioMuted, startVideoMuted));
     };
 }
 

@@ -206,7 +206,6 @@ export default [
     'prejoinConfig.isUserStartingTheMeeting',
     'prejoinConfig.hideDisplayName',
     'prejoinConfig.hideExtraJoinButtons',
-    'prejoinPageEnabled',
     'raisedHands',
     'recordingService',
     'requireDisplayName',

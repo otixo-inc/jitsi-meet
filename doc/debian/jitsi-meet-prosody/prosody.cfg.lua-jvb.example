@@ -58,28 +58,21 @@ VirtualHost "jitmeet.example.com"
         key = "/etc/prosody/certs/jitmeet.example.com.key";
         certificate = "/etc/prosody/certs/jitmeet.example.com.crt";
     }
-    av_moderation_component = "avmoderation.jitmeet.example.com"
-    speakerstats_component = "speakerstats.jitmeet.example.com"
-    end_conference_component = "endconference.jitmeet.example.com"
     -- we need bosh
     modules_enabled = {
         "bosh";
         "websocket";
         "smacks";
         "ping"; -- Enable mod_ping
-        "speakerstats";
         "external_services";
+        "features_identity";
         "conference_duration";
-        "end_conference";
         "muc_lobby_rooms";
         "muc_breakout_rooms";
-        "av_moderation";
-        "room_metadata";
     }
     c2s_require_encryption = false
     lobby_muc = "lobby.jitmeet.example.com"
     breakout_rooms_muc = "breakout.jitmeet.example.com"
-    room_metadata_component = "metadata.jitmeet.example.com"
     main_muc = "conference.jitmeet.example.com"
     -- muc_lobby_whitelist = { "recorder.jitmeet.example.com" } -- Here we can whitelist jibri to enter lobby enabled rooms
 
@@ -90,7 +83,6 @@ Component "conference.jitmeet.example.com" "muc"
         "muc_hide_all";
         "muc_meeting_id";
         "muc_domain_mapper";
-        "polls";
         --"token_verification";
         "muc_rate_limit";
         "muc_password_whitelist";
@@ -155,6 +147,9 @@ Component "endconference.jitmeet.example.com" "end_conference"
 Component "avmoderation.jitmeet.example.com" "av_moderation_component"
     muc_component = "conference.jitmeet.example.com"
 
+Component "filesharing.jitmeet.example.com" "filesharing_component"
+    muc_component = "conference.jitmeet.example.com"
+
 Component "lobby.jitmeet.example.com" "muc"
     storage = "memory"
     restrict_room_creation = true
@@ -163,9 +158,10 @@ Component "lobby.jitmeet.example.com" "muc"
     modules_enabled = {
         "muc_hide_all";
         "muc_rate_limit";
-        "polls";
     }
 
 Component "metadata.jitmeet.example.com" "room_metadata_component"
     muc_component = "conference.jitmeet.example.com"
     breakout_rooms_component = "breakout.jitmeet.example.com"
+
+Component "polls.jitmeet.example.com" "polls_component"
