@@ -23,7 +23,6 @@ import StateListenerRegistry from '../base/redux/StateListenerRegistry';
 import {
     playSound,
     registerSound,
-    stopSound,
     unregisterSound
 } from '../base/sounds/actions';
 import { isTestModeEnabled } from '../base/testing/functions';
@@ -53,8 +52,7 @@ import {
 
 import {
     KNOCKING_PARTICIPANT_ARRIVED_OR_UPDATED,
-    KNOCKING_PARTICIPANT_LEFT,
-    SET_LOBBY_VISIBILITY
+    KNOCKING_PARTICIPANT_LEFT
 } from './actionTypes';
 import {
     approveKnockingParticipant,
@@ -69,9 +67,9 @@ import {
     startKnocking
 } from './actions';
 import { updateLobbyParticipantOnLeave } from './actions.any';
-import { KNOCKING_PARTICIPANT_SOUND_ID, LOBBY_MUSIC_SOUND_ID } from './constants';
+import { KNOCKING_PARTICIPANT_SOUND_ID } from './constants';
 import { getKnockingParticipants, showLobbyChatButton } from './functions';
-import { KNOCKING_PARTICIPANT_FILE, LOBBY_MUSIC_FILE } from './sounds';
+import { KNOCKING_PARTICIPANT_FILE } from './sounds';
 import { IKnockingParticipant } from './types';
 
 
@@ -79,11 +77,9 @@ MiddlewareRegistry.register(store => next => action => {
     switch (action.type) {
     case APP_WILL_MOUNT:
         store.dispatch(registerSound(KNOCKING_PARTICIPANT_SOUND_ID, KNOCKING_PARTICIPANT_FILE));
-        store.dispatch(registerSound(LOBBY_MUSIC_SOUND_ID, LOBBY_MUSIC_FILE));
         break;
     case APP_WILL_UNMOUNT:
         store.dispatch(unregisterSound(KNOCKING_PARTICIPANT_SOUND_ID));
-        store.dispatch(unregisterSound(LOBBY_MUSIC_SOUND_ID));
         break;
     case CONFERENCE_FAILED:
         return _conferenceFailed(store, next, action);
@@ -119,14 +115,6 @@ MiddlewareRegistry.register(store => next => action => {
             store.dispatch(hideNotification(LOBBY_NOTIFICATION_ID));
         }
 
-        break;
-    }
-    case SET_LOBBY_VISIBILITY: {
-        if (action.visible) {
-            store.dispatch(playSound(LOBBY_MUSIC_SOUND_ID));
-        } else {
-            store.dispatch(stopSound(LOBBY_MUSIC_SOUND_ID));
-        }
         break;
     }
     }

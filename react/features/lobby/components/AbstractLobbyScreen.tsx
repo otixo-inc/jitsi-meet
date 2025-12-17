@@ -13,6 +13,7 @@ import { updateSettings } from '../../base/settings/actions';
 import { IMessage } from '../../chat/types';
 import { isDeviceStatusVisible } from '../../prejoin/functions';
 import { cancelKnocking, joinWithPassword, onSendMessage, setPasswordJoinFailed, startKnocking } from '../actions';
+import { AudioElement } from '../../base/media/components/AbstractAudio';
 import { getLobbyConfig } from '../functions';
 
 export const SCREEN_STATES = {
@@ -132,6 +133,11 @@ interface IState {
     isChatOpen: boolean;
 
     /**
+     * The state of the lobby music.
+     */
+    lobbyMusicPlaying: boolean;
+
+    /**
      * The password value entered into the field.
      */
     password: string;
@@ -152,6 +158,10 @@ interface IState {
  */
 export default class AbstractLobbyScreen<P extends IProps = IProps> extends PureComponent<P, IState> {
     /**
+     * Reference to the audio element for playing lobby muic.
+     */
+    _lobbyMusicRef: AudioElement | null | any;
+    /**
      * Instantiates a new component.
      *
      * @inheritdoc
@@ -165,8 +175,11 @@ export default class AbstractLobbyScreen<P extends IProps = IProps> extends Pure
             isChatOpen: true,
             password: '',
             passwordJoinFailed: false,
+            lobbyMusicPlaying: true,
             screenState: props._participantName ? SCREEN_STATES.VIEW : SCREEN_STATES.EDIT
         };
+        this._lobbyMusicRef = null;
+        this._audioElementReady = this._audioElementReady.bind(this);
 
         this._onAskToJoin = this._onAskToJoin.bind(this);
         this._onCancel = this._onCancel.bind(this);
@@ -179,6 +192,15 @@ export default class AbstractLobbyScreen<P extends IProps = IProps> extends Pure
         this._onSwitchToKnockMode = this._onSwitchToKnockMode.bind(this);
         this._onSwitchToPasswordMode = this._onSwitchToPasswordMode.bind(this);
         this._onToggleChat = this._onToggleChat.bind(this);
+    }
+
+    _audioElementReady(element: HTMLAudioElement) {
+        this._lobbyMusicRef = element;
+        this._playLobbyMusic();
+    }
+
+    _playLobbyMusic() {
+        this._lobbyMusicRef?.play();
     }
 
     /**
@@ -381,6 +403,7 @@ export default class AbstractLobbyScreen<P extends IProps = IProps> extends Pure
                 { (screenState === SCREEN_STATES.VIEW || screenState === SCREEN_STATES.EDIT)
                     && this._renderStandardButtons() }
                 { screenState === SCREEN_STATES.PASSWORD && this._renderPasswordJoinButtons() }
+
             </>
         );
     }
