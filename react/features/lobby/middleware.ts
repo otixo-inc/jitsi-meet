@@ -54,7 +54,7 @@ import {
 import {
     KNOCKING_PARTICIPANT_ARRIVED_OR_UPDATED,
     KNOCKING_PARTICIPANT_LEFT,
-    SET_KNOCKING_STATE
+    SET_LOBBY_VISIBILITY
 } from './actionTypes';
 import {
     approveKnockingParticipant,
@@ -121,8 +121,8 @@ MiddlewareRegistry.register(store => next => action => {
 
         break;
     }
-    case SET_KNOCKING_STATE: {
-        if (action.knocking) {
+    case SET_LOBBY_VISIBILITY: {
+        if (action.visible) {
             store.dispatch(playSound(LOBBY_MUSIC_SOUND_ID));
         } else {
             store.dispatch(stopSound(LOBBY_MUSIC_SOUND_ID));
