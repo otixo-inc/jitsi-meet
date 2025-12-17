@@ -23,6 +23,7 @@ import VideoMuteButton from '../../../toolbox/components/native/VideoMuteButton'
 import AbstractLobbyScreen, {
     IProps as AbstractProps,
     _mapStateToProps as abstractMapStateToProps } from '../AbstractLobbyScreen';
+import { Audio } from '../../../base/media/components/index';
 
 import styles from './styles';
 
@@ -49,7 +50,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * @inheritdoc
      */
     override render() {
-        const { _aspectRatio, _roomName } = this.props;
+        const { _aspectRatio, _roomName, _knocking } = this.props;
         let contentWrapperStyles;
         let contentContainerStyles;
         let largeVideoContainerStyles;
@@ -82,6 +83,11 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                 <View style = { contentContainerStyles as ViewStyle }>
                     { this._renderToolbarButtons() }
                     { this._renderContent() }
+                    {_knocking
+                      && <Audio
+                          setRef = { this._audioElementReady }
+                          src = 'sounds/lobby.mp3' />
+                    }
                 </View>
             </JitsiScreen>
         );
@@ -103,6 +109,8 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * @inheritdoc
      */
     _renderJoining() {
+        const { _knocking } = this.props;
+
         return (
             <View style = { styles.lobbyWaitingFragmentContainer }>
                 {/* <Text style = { styles.lobbyTitle }>

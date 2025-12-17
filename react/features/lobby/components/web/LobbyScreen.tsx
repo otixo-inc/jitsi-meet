@@ -10,6 +10,7 @@ import Button from '../../../base/ui/components/web/Button';
 import Input from '../../../base/ui/components/web/Input';
 import ChatInput from '../../../chat/components/web/ChatInput';
 import MessageContainer from '../../../chat/components/web/MessageContainer';
+import { Audio } from '../../../base/media/components/index';
 import AbstractLobbyScreen, {
     IProps,
     _mapStateToProps
@@ -17,7 +18,7 @@ import AbstractLobbyScreen, {
 
 import './LobbyScreen.css';
 
-const containerStyle = {
+const style = {
     backgroundImage: 'url(/images/lobby-bg-sm.jpeg)'
 };
 
@@ -71,19 +72,24 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * @inheritdoc
      */
     override render() {
-        const { _deviceStatusVisible, showCopyUrlButton, t } = this.props;
+        const { _deviceStatusVisible, showCopyUrlButton, t, _knocking } = this.props;
 
         return (
             <>
                 <PreMeetingScreen
                     className = 'lobby-screen'
-                    containerStyle = { containerStyle }
+                    containerStyle = { style }
                     showCopyUrlButton = { showCopyUrlButton }
                     showDeviceStatus = { false }
                     showDeviceStatusInVideo = { _deviceStatusVisible }
                     title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
                     {this._renderWeTeamTitle()}
                     { this._renderContent() }
+                    {_knocking
+                      && <Audio
+                          setRef = { this._audioElementReady }
+                          src = 'sounds/lobby.mp3' />
+                    }
                 </PreMeetingScreen>
             </>
         );
@@ -120,7 +126,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * @inheritdoc
      */
     override _renderJoining() {
-        const { _isLobbyChatActive, t } = this.props;
+        const { _isLobbyChatActive, _knocking } = this.props;
 
         return (
             <div className = 'lobby-screen-content'>

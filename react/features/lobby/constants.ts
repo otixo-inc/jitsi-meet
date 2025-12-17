@@ -23,10 +23,3 @@ export const LOBBY_CHAT_INITIALIZED = 'LOBBY_CHAT_INITIALIZED';
    * @type {string}
    */
 export const MODERATOR_IN_CHAT_WITH_LEFT = 'MODERATOR_IN_CHAT_WITH_LEFT';
-
-/**
- * The identifier of the sound to be played when a participant joins lobby.
- *
- * @type {string}
- */
-export const LOBBY_MUSIC_SOUND_ID = 'LOBBY_MUSIC_SOUND';
