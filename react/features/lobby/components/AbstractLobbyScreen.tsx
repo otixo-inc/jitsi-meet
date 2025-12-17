@@ -121,6 +121,11 @@ interface IState {
     isChatOpen: boolean;
 
     /**
+     * The state of the lobby music.
+     */
+    lobbyMusicPlaying: boolean;
+
+    /**
      * The password value entered into the field.
      */
     password: string;
@@ -154,6 +159,7 @@ export default class AbstractLobbyScreen<P extends IProps = IProps> extends Pure
             isChatOpen: true,
             password: '',
             passwordJoinFailed: false,
+            lobbyMusicPlaying: true,
             screenState: props._participantName ? SCREEN_STATES.VIEW : SCREEN_STATES.EDIT
         };
 

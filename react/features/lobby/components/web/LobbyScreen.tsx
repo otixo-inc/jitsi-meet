@@ -17,10 +17,6 @@ import AbstractLobbyScreen, {
 
 import './LobbyScreen.css';
 
-const containerStyle = {
-    backgroundImage: 'url(/images/lobby-bg-sm.jpeg)'
-};
-
 /**
  * Implements a waiting screen that represents the participant being in the lobby.
  */
@@ -30,6 +26,10 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * scrolling to the end of the chat messages.
      */
     _messageContainerRef: React.RefObject<MessageContainer>;
+    /**
+     * Reference to the audio element for playing lobby muic.
+     */
+    _lobbyMusicRef: React.RefObject<HTMLAudioElement>;
 
     /**
        * Initializes a new {@code LobbyScreen} instance.
@@ -41,6 +41,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
         super(props);
 
         this._messageContainerRef = React.createRef<MessageContainer>();
+        this._lobbyMusicRef = React.createRef<HTMLAudioElement>();
     }
 
     /**
@@ -50,6 +51,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
        */
     override componentDidMount() {
         this._scrollMessageContainerToBottom(true);
+        this._playLobbyMusic();
     }
 
     /**
@@ -77,16 +79,37 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
             <>
                 <PreMeetingScreen
                     className = 'lobby-screen'
-                    containerStyle = { containerStyle }
+                    containerStyle = {{
+                        backgroundImage: 'url(/images/lobby-bg-sm.jpeg)'
+                    }}
                     showCopyUrlButton = { showCopyUrlButton }
                     showDeviceStatus = { false }
                     showDeviceStatusInVideo = { _deviceStatusVisible }
                     title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
+                    <audio
+                        loop = { true }
+                        ref = { this._lobbyMusicRef }
+                        src = 'sounds/lobby.mp3' />
                     {this._renderWeTeamTitle()}
                     { this._renderContent() }
                 </PreMeetingScreen>
             </>
         );
+    }
+
+    _playLobbyMusic() {
+        const play = () => {
+            this._lobbyMusicRef.current?.play().catch(e => {
+                /*
+            https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#audiovideo_elements
+            If the browser prevents playback because the user has not interacted with the document.
+            Try to play the sound again in 1 second. Keep trying until it succeeds or the invitation ends.
+          */
+                setTimeout(play, 1000);
+            });
+        };
+
+        play();
     }
 
     _renderWeTeamTitle() {
