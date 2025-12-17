@@ -10,12 +10,17 @@ import Button from '../../../base/ui/components/web/Button';
 import Input from '../../../base/ui/components/web/Input';
 import ChatInput from '../../../chat/components/web/ChatInput';
 import MessageContainer from '../../../chat/components/web/MessageContainer';
+import { Audio } from '../../../base/media/components/index';
 import AbstractLobbyScreen, {
     IProps,
     _mapStateToProps
 } from '../AbstractLobbyScreen';
 
 import './LobbyScreen.css';
+
+const style = {
+    backgroundImage: 'url(/images/lobby-bg-sm.jpeg)'
+};
 
 /**
  * Implements a waiting screen that represents the participant being in the lobby.
@@ -26,10 +31,6 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * scrolling to the end of the chat messages.
      */
     _messageContainerRef: React.RefObject<MessageContainer>;
-    /**
-     * Reference to the audio element for playing lobby muic.
-     */
-    _lobbyMusicRef: React.RefObject<HTMLAudioElement>;
 
     /**
        * Initializes a new {@code LobbyScreen} instance.
@@ -41,7 +42,6 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
         super(props);
 
         this._messageContainerRef = React.createRef<MessageContainer>();
-        this._lobbyMusicRef = React.createRef<HTMLAudioElement>();
     }
 
     /**
@@ -51,7 +51,6 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
        */
     override componentDidMount() {
         this._scrollMessageContainerToBottom(true);
-        this._playLobbyMusic();
     }
 
     /**
@@ -73,43 +72,22 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * @inheritdoc
      */
     override render() {
-        const { _deviceStatusVisible, showCopyUrlButton, t } = this.props;
+        const { _deviceStatusVisible, showCopyUrlButton, t, _knocking } = this.props;
 
         return (
             <>
                 <PreMeetingScreen
                     className = 'lobby-screen'
-                    containerStyle = {{
-                        backgroundImage: 'url(/images/lobby-bg-sm.jpeg)'
-                    }}
+                    containerStyle = { style }
                     showCopyUrlButton = { showCopyUrlButton }
                     showDeviceStatus = { false }
                     showDeviceStatusInVideo = { _deviceStatusVisible }
                     title = { t(this._getScreenTitleKey(), { moderator: this.props._lobbyMessageRecipient }) }>
-                    <audio
-                        loop = { true }
-                        ref = { this._lobbyMusicRef }
-                        src = 'sounds/lobby.mp3' />
                     {this._renderWeTeamTitle()}
                     { this._renderContent() }
                 </PreMeetingScreen>
             </>
         );
-    }
-
-    _playLobbyMusic() {
-        const play = () => {
-            this._lobbyMusicRef.current?.play().catch(e => {
-                /*
-            https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#audiovideo_elements
-            If the browser prevents playback because the user has not interacted with the document.
-            Try to play the sound again in 1 second. Keep trying until it succeeds or the invitation ends.
-          */
-                setTimeout(play, 1000);
-            });
-        };
-
-        play();
     }
 
     _renderWeTeamTitle() {
@@ -143,7 +121,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * @inheritdoc
      */
     override _renderJoining() {
-        const { _isLobbyChatActive, t } = this.props;
+        const { _isLobbyChatActive, _knocking } = this.props;
 
         return (
             <div className = 'lobby-screen-content'>
@@ -154,6 +132,11 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                     )
                 }
                 { this._renderStandardButtons() }
+                {_knocking
+                  && <Audio
+                      setRef = { this._audioElementReady }
+                      src = 'sounds/lobby.mp3' />
+                }
             </div>
         );
     }

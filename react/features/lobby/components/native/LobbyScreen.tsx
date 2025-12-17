@@ -23,6 +23,7 @@ import VideoMuteButton from '../../../toolbox/components/native/VideoMuteButton'
 import AbstractLobbyScreen, {
     IProps as AbstractProps,
     _mapStateToProps as abstractMapStateToProps } from '../AbstractLobbyScreen';
+import { Audio } from '../../../base/media/components/index';
 
 import styles from './styles';
 
@@ -103,6 +104,8 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
      * @inheritdoc
      */
     _renderJoining() {
+        const { _knocking } = this.props;
+
         return (
             <View style = { styles.lobbyWaitingFragmentContainer }>
                 {/* <Text style = { styles.lobbyTitle }>
@@ -115,6 +118,11 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                     color = { BaseTheme.palette.icon01 }
                     style = { styles.loadingIndicator } />
                 { this._renderStandardButtons() }
+                {_knocking
+                  && <Audio
+                      setRef = { this._audioElementReady }
+                      src = 'sounds/lobby.mp3' />
+                }
             </View>
         );
     }
