@@ -5,9 +5,11 @@ import { connect } from 'react-redux';
 import { IReduxState } from '../../../app/types';
 import { getConferenceName } from '../../../base/conference/functions';
 import { translate } from '../../../base/i18n/functions';
+import { Audio } from '../../../base/media/components/index';
 import JitsiScreen from '../../../base/modal/components/JitsiScreen';
 import LoadingIndicator from '../../../base/react/components/native/LoadingIndicator';
 import { ASPECT_RATIO_NARROW } from '../../../base/responsive-ui/constants';
+import { getSoundsPath } from '../../../base/sounds/functions';
 import BaseTheme from '../../../base/ui/components/BaseTheme.native';
 import Button from '../../../base/ui/components/native/Button';
 import Input from '../../../base/ui/components/native/Input';
@@ -23,7 +25,6 @@ import VideoMuteButton from '../../../toolbox/components/native/VideoMuteButton'
 import AbstractLobbyScreen, {
     IProps as AbstractProps,
     _mapStateToProps as abstractMapStateToProps } from '../AbstractLobbyScreen';
-import { Audio } from '../../../base/media/components/index';
 
 import styles from './styles';
 
@@ -86,7 +87,7 @@ class LobbyScreen extends AbstractLobbyScreen<IProps> {
                     {_knocking
                       && <Audio
                           setRef = { this._audioElementReady }
-                          src = 'sounds/lobby.mp3' />
+                          src = { `${getSoundsPath()}/lobby.mp3` } />
                     }
                 </View>
             </JitsiScreen>
