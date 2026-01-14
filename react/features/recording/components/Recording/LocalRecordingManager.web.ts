@@ -4,10 +4,10 @@ import { v4 as uuidV4 } from 'uuid';
 
 import { IStore } from '../../../app/types';
 import { getRoomName } from '../../../base/conference/functions';
-import { MEDIA_TYPE } from '../../../base/media/constants';
-import { getLocalTrack, getTrackState } from '../../../base/tracks/functions';
 import { isMobileBrowser } from '../../../base/environment/utils';
 import { browser } from '../../../base/lib-jitsi-meet';
+import { MEDIA_TYPE } from '../../../base/media/constants';
+import { getLocalTrack, getTrackState } from '../../../base/tracks/functions';
 import { isEmbedded } from '../../../base/util/embedUtils';
 import { stopLocalVideoRecording } from '../../actions.any';
 import logger from '../../logger';
@@ -213,13 +213,16 @@ const LocalRecordingManager: ILocalRecordingManager = {
             });
 
             const gdmVideoTrack = gdmStream.getVideoTracks()[0];
-            const isBrowser = gdmVideoTrack.getSettings().displaySurface === 'browser';
-            const matchesHandle = (supportsCaptureHandle // @ts-ignore
-                && gdmVideoTrack.getCaptureHandle()?.handle === `JitsiMeet-${tabId}`);
 
-            if (!isBrowser || !matchesHandle) {
-                gdmStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-                throw new Error('WrongSurfaceSelected');
+            if (supportsCaptureHandle) {
+                const isBrowser = gdmVideoTrack.getSettings().displaySurface === 'browser';
+                const matchesHandle = (supportsCaptureHandle // @ts-ignore
+                    && gdmVideoTrack.getCaptureHandle()?.handle === `JitsiMeet-${tabId}`);
+
+                if (!isBrowser || !matchesHandle) {
+                    gdmStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+                    throw new Error('WrongSurfaceSelected');
+                }
             }
 
             this.initializeAudioMixer();

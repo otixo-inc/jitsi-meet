@@ -1,15 +1,18 @@
 import AllureReporter from '@wdio/allure-reporter';
 import { multiremotebrowser } from '@wdio/globals';
 import { Buffer } from 'buffer';
-import minimatch from 'minimatch';
+import fs from 'fs';
+import { glob } from 'glob';
 import path from 'node:path';
 import process from 'node:process';
 import pretty from 'pretty';
 
+import { getTestProperties, loadTestFiles } from './helpers/TestProperties';
+import { config as testsConfig } from './helpers/TestsConfig';
 import WebhookProxy from './helpers/WebhookProxy';
-import { getLogs, initLogger, logInfo } from './helpers/browserLogger';
+import { getLogs, initLogger, logInfo, saveLogs } from './helpers/browserLogger';
 import { IContext } from './helpers/types';
-import { getRandomNumberAsStr } from './helpers/utils';
+import { generateRoomName } from './helpers/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const allure = require('allure-commandline');
@@ -55,15 +58,82 @@ const chromePreferences = {
     'intl.accept_languages': 'en-US'
 };
 
+const specs = [
+    'specs/**/*.spec.ts'
+];
+
+/**
+ * Analyzes test files at config construction time to determine browser requirements
+ * and generate capabilities with appropriate exclusions.
+ */
+function generateCapabilitiesFromSpecs(): Record<string, any> {
+    const allSpecFiles: string[] = [];
+    const browsers = [ 'p1', 'p2', 'p3', 'p4' ];
+
+    for (const pattern of specs) {
+        const matches = glob.sync(pattern, { cwd: path.join(__dirname) });
+
+        allSpecFiles.push(...matches.map(f => path.resolve(__dirname, f)));
+    }
+
+    // Load test files to populate the testProperties registry
+    loadTestFiles(allSpecFiles);
+
+    // Import TestProperties to access the populated registry
+    const { testProperties } = require('./helpers/TestProperties');
+
+    // Determine which browsers need which exclusions
+    const browserExclusions: Record<string, Set<string>> = {
+        p1: new Set(),
+        p2: new Set(),
+        p3: new Set(),
+        p4: new Set()
+    };
+
+    for (const file of allSpecFiles) {
+        const props = testProperties[file];
+        const relativeFile = path.relative(__dirname, file);
+
+        // If a test doesn't use a particular browser, add it to exclusions for that browser
+        if (props?.usesBrowsers) {
+            browsers.forEach(browser => {
+                if (!props.usesBrowsers!.includes(browser)) {
+                    browserExclusions[browser].add(relativeFile);
+                }
+            });
+        }
+    }
+
+    return Object.fromEntries(
+        browsers.map(browser => [
+            browser,
+            {
+                capabilities: {
+                    browserName: 'chrome',
+                    ...(browser === 'p1' && process.env.BROWSER_CHROME_BETA ? { browserVersion: 'beta' } : {}),
+                    'goog:chromeOptions': {
+                        args: chromeArgs,
+                        prefs: chromePreferences
+                    },
+                    'wdio:exclude': Array.from(browserExclusions[browser] || [])
+                }
+            }
+        ])
+    );
+}
+
+const capabilities = generateCapabilitiesFromSpecs();
+
 const TEST_RESULTS_DIR = 'test-results';
+
+const keepAlive: Array<any> = [];
 
 export const config: WebdriverIO.MultiremoteConfig = {
 
     runner: 'local',
 
-    specs: [
-        'specs/**'
-    ],
+    specs,
+
     maxInstances: parseInt(process.env.MAX_INSTANCES || '1', 10), // if changing check onWorkerStart logic
 
     baseUrl: process.env.BASE_URL || 'https://alpha.jitsi.net/torture/',
@@ -85,67 +155,25 @@ export const config: WebdriverIO.MultiremoteConfig = {
         timeout: 180_000
     },
 
-    capabilities: {
-        // participant1
-        p1: {
-            capabilities: {
-                browserName: 'chrome',
-                browserVersion: process.env.BROWSER_CHROME_BETA ? 'beta' : undefined,
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                }
-            }
-        },
-        // participant2
-        p2: {
-            capabilities: {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                },
-                'wdio:exclude': [
-                    'specs/alone/**'
-                ]
-            }
-        },
-        // participant3
-        p3: {
-            capabilities: {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                },
-                'wdio:exclude': [
-                    'specs/alone/**',
-                    'specs/2way/**'
-                ]
-            }
-        },
-        // participant4
-        p4: {
-            capabilities: {
-                browserName: 'chrome',
-                'goog:chromeOptions': {
-                    args: chromeArgs,
-                    prefs: chromePreferences
-                },
-                'wdio:exclude': [
-                    'specs/alone/**',
-                    'specs/2way/**',
-                    'specs/3way/**'
-                ]
-            }
-        }
-    },
+    capabilities,
 
     // Level of logging verbosity: trace | debug | info | warn | error | silent
     logLevel: 'trace',
     logLevels: {
         webdriver: 'info'
     },
+
+    // Can be used to debug chromedriver, depends on chromedriver and wdio-chromedriver-service
+    // services: [
+    //     [ 'chromedriver', {
+    //         // Pass the --verbose flag to Chromedriver
+    //         args: [ '--verbose' ],
+    //         // Optionally, define a file to store the logs instead of stdout
+    //         logFileName: 'wdio-chromedriver.log',
+    //         // Optionally, define a directory for the log file
+    //         outputDir: 'test-results',
+    //     } ]
+    // ],
 
     // Set directory to store all logs into
     outputDir: TEST_RESULTS_DIR,
@@ -176,22 +204,31 @@ export const config: WebdriverIO.MultiremoteConfig = {
      *
      * @returns {Promise<void>}
      */
-    async before(cid, _, specs) {
-        if (specs.length !== 1) {
+    async before(cid, _, files) {
+        if (files.length !== 1) {
             console.warn('We expect to run a single suite, but got more than one');
         }
 
-        const testName = path.basename(specs[0]).replace('.spec.ts', '');
+        const testFilePath = files[0].replace(/^file:\/\//, '');
+        const testName = path.relative('tests/specs', testFilePath)
+            .replace(/.spec.ts$/, '')
+            .replace(/\//g, '-');
+        const testProperties = await getTestProperties(testFilePath);
 
         console.log(`Running test: ${testName} via worker: ${cid}`);
 
         const globalAny: any = global;
 
         globalAny.ctx = {
-            data: {},
             times: {}
         } as IContext;
-        globalAny.ctx.keepAlive = [];
+        globalAny.ctx.testProperties = testProperties;
+
+        if (testProperties.useJaas && !testsConfig.jaas.enabled) {
+            globalAny.ctx.skipSuiteTests = 'JaaS is not configured';
+
+            return;
+        }
 
         await Promise.all(multiremotebrowser.instances.map(async (instance: string) => {
             const bInstance = multiremotebrowser.getInstance(instance);
@@ -200,7 +237,7 @@ export const config: WebdriverIO.MultiremoteConfig = {
             initLogger(bInstance, `${instance}-${cid}-${testName}`, TEST_RESULTS_DIR);
 
             // setup keepalive
-            globalAny.ctx.keepAlive.push(setInterval(async () => {
+            keepAlive.push(setInterval(async () => {
                 await bInstance.execute(() => console.log(`${new Date().toISOString()} keep-alive`));
             }, 20_000));
 
@@ -214,32 +251,31 @@ export const config: WebdriverIO.MultiremoteConfig = {
             bInstance.iframePageBase = `file://${path.dirname(rpath)}`;
         }));
 
-        globalAny.ctx.roomName = `${testName}-${getRandomNumberAsStr(40, 3)}`;
-        if (process.env.ROOM_NAME_PREFIX) {
-            globalAny.ctx.roomName = `${process.env.ROOM_NAME_PREFIX.trim()}_${globalAny.ctx.roomName}`;
-        }
-        if (process.env.ROOM_NAME_SUFFIX) {
-            globalAny.ctx.roomName += `_${process.env.ROOM_NAME_SUFFIX.trim()}`;
-        }
+        globalAny.ctx.roomName = generateRoomName(testName);
+        console.log(`Using room name: ${globalAny.ctx.roomName}`);
 
-        globalAny.ctx.roomName = globalAny.ctx.roomName.toLowerCase();
-        globalAny.ctx.jwtPrivateKeyPath = process.env.JWT_PRIVATE_KEY_PATH;
-        globalAny.ctx.jwtKid = process.env.JWT_KID;
-        globalAny.ctx.isJaasAvailable = () => globalAny.ctx.jwtKid?.startsWith('vpaas-magic-cookie-');
+        if (testProperties.useWebhookProxy && testsConfig.webhooksProxy.enabled && !globalAny.ctx.webhooksProxy) {
+            const tenant = testsConfig.jaas.tenant;
 
-        // If we are running the iFrameApi tests, we need to mark it as such and if needed to create the proxy
-        // and connect to it.
-        if (testName.startsWith('iFrameApi')) {
-            globalAny.ctx.iframeAPI = true;
-
-            if (!globalAny.ctx.webhooksProxy
-                && process.env.WEBHOOKS_PROXY_URL && process.env.WEBHOOKS_PROXY_SHARED_SECRET) {
-                globalAny.ctx.webhooksProxy = new WebhookProxy(
-                    `${process.env.WEBHOOKS_PROXY_URL}&room=${globalAny.ctx.roomName}`,
-                    process.env.WEBHOOKS_PROXY_SHARED_SECRET,
-                    `${TEST_RESULTS_DIR}/webhooks-${cid}-${testName}.log`);
-                globalAny.ctx.webhooksProxy.connect();
+            if (!testProperties.useJaas) {
+                throw new Error('The test tries to use WebhookProxy without JaaS.');
             }
+            if (!tenant) {
+                console.log(`Can not configure WebhookProxy, missing tenant in config. Skipping ${testName}.`);
+                globalAny.ctx.skipSuiteTests = 'WebHookProxy is required but not configured (missing tenant)';
+
+                return;
+            }
+
+            globalAny.ctx.webhooksProxy = new WebhookProxy(
+                `${testsConfig.webhooksProxy.url}?tenant=${tenant}&room=${globalAny.ctx.roomName}`,
+                testsConfig.webhooksProxy.sharedSecret!,
+                `${TEST_RESULTS_DIR}/webhooks-${cid}-${testName}.log`);
+            globalAny.ctx.webhooksProxy.connect();
+        }
+
+        if (testProperties.requireWebhookProxy && !globalAny.ctx.webhooksProxy) {
+            throw new Error('The test requires WebhookProxy, but it is not available.');
         }
     },
 
@@ -247,10 +283,10 @@ export const config: WebdriverIO.MultiremoteConfig = {
         const { ctx }: any = global;
 
         ctx?.webhooksProxy?.disconnect();
-        ctx?.keepAlive?.forEach(clearInterval);
+        keepAlive.forEach(clearInterval);
     },
 
-    beforeSession(c, capabilities, specs, cid) {
+    beforeSession(c, capabilities_, specs_, cid) {
         const originalBefore = c.before;
 
         if (!originalBefore || !Array.isArray(originalBefore) || originalBefore.length !== 1) {
@@ -287,7 +323,33 @@ export const config: WebdriverIO.MultiremoteConfig = {
      * @param {Object} context - The context object.
      */
     beforeTest(test, context) {
+        // Extract directory to use as parent suite and describe block name as suite
+        const dirMatch = test.file.match(/.*\/tests\/specs\/([^\/]+)\//);
+        const dir = dirMatch ? dirMatch[1] : false;
+        const fileMatch = test.file.match(/.*\/tests\/specs\/(.*)/);
+        const file = fileMatch ? fileMatch[1] : false;
+
+        if (ctx.testProperties.description) {
+            AllureReporter.addDescription(ctx.testProperties.description, 'text');
+        }
+
+        if (file) {
+            AllureReporter.addLink(`https://github.com/jitsi/jitsi-meet/blob/master/tests/specs/${file}`, 'Code');
+        }
+
+        // For Allure v3: set directory as parent suite and describe block as suite
+        if (dir && test.parent) {
+            AllureReporter.addParentSuite(dir);
+            AllureReporter.addSuite(test.parent);
+        }
+
         if (ctx.skipSuiteTests) {
+            if ((typeof ctx.skipSuiteTests) === 'string') {
+                AllureReporter.addDescription((ctx.testProperties.description || '')
+                    + '\n\nSkipped because: ' + ctx.skipSuiteTests, 'text');
+            }
+            console.log(`Skipping because: ${ctx.skipSuiteTests}`);
+
             context.skip();
 
             return;
@@ -296,26 +358,6 @@ export const config: WebdriverIO.MultiremoteConfig = {
         multiremotebrowser.instances.forEach((instance: string) => {
             logInfo(multiremotebrowser.getInstance(instance), `---=== Start test ${test.title} ===---`);
         });
-    },
-
-    /**
-     * Gets executed before a worker process is spawned and can be used to initialize specific service
-     * for that worker as well as modify runtime environments in an async fashion.
-     */
-    onWorkerStart(...args) {
-        // We run a worker per suite, and replay on this logic here
-        if (args[2].length > 1) {
-            console.warn('Our worker is supposed to get a single suite, but got more than one');
-
-            return;
-        }
-
-        // We skip the suite tests if the suite is marked as such, we used that from firefox overwrite
-        // @ts-ignore
-        if (config?.ffExcludes?.some(
-                (e: string) => minimatch(args[2][0].replace('file://', ''), `${__dirname}/${e}`))) {
-            args[2].pop();
-        }
     },
 
     /**
@@ -331,35 +373,67 @@ export const config: WebdriverIO.MultiremoteConfig = {
             logInfo(multiremotebrowser.getInstance(instance), `---=== End test ${test.title} ===---`));
 
         if (error) {
+
+            // skip all remaining tests in the suite
+            ctx.skipSuiteTests = `Test "${test.title}" has failed.`;
+
+            // make sure all browsers are at the main app in iframe (if used), so we collect debug info
+            await Promise.all(multiremotebrowser.instances.map(async (instance: string) => {
+                // @ts-ignore
+                await ctx[instance]?.switchToIFrame();
+            }));
+
             const allProcessing: Promise<any>[] = [];
+            const attachments: { content: string | Buffer; filename: string; type: string; }[] = [];
 
             multiremotebrowser.instances.forEach((instance: string) => {
                 const bInstance = multiremotebrowser.getInstance(instance);
 
                 allProcessing.push(bInstance.takeScreenshot().then(shot => {
-                    AllureReporter.addAttachment(
-                        `Screenshot-${instance}`,
-                        Buffer.from(shot, 'base64'),
-                        'image/png');
+                    attachments.push({
+                        filename: `${instance}-screenshot`,
+                        content: Buffer.from(shot, 'base64'),
+                        type: 'image/png' });
                 }));
 
                 // @ts-ignore
                 allProcessing.push(bInstance.execute(() => typeof APP !== 'undefined' && APP.connection?.getLogs())
                     .then(logs =>
-                        logs && AllureReporter.addAttachment(
-                            `debug-logs-${instance}`,
-                            JSON.stringify(logs, null, '    '),
-                            'text/plain'))
+                        logs && attachments.push({
+                            filename: `${instance}-debug-logs`,
+                            content: JSON.stringify(logs, null, '    '),
+                            type: 'text/plain' }))
                     .catch(e => console.error('Failed grabbing debug logs', e)));
 
-                AllureReporter.addAttachment(`console-logs-${instance}`, getLogs(bInstance) || '', 'text/plain');
+                allProcessing.push(
+                    bInstance.execute(() => window.APP?.debugLogs?.logs?.join('\n')).then(res => {
+                        if (res) {
+                            saveLogs(bInstance, res);
+                        }
+
+                        attachments.push({
+                            filename: `${instance}-console-logs`,
+                            content: getLogs(bInstance) || '',
+                            type: 'text/plain' });
+                    }));
 
                 allProcessing.push(bInstance.getPageSource().then(source => {
-                    AllureReporter.addAttachment(`html-source-${instance}`, pretty(source), 'text/plain');
+                    attachments.push({
+                        filename: `${instance}-html-source`,
+                        content: pretty(source),
+                        type: 'text/plain' });
                 }));
             });
 
             await Promise.allSettled(allProcessing);
+            attachments.sort(
+                (a, b) => {
+                    return a.filename < b.filename ? -1 : 1;
+                }).forEach(
+                a => {
+                    AllureReporter.addAttachment(a.filename, a.content, a.type);
+                }
+            );
         }
     },
 
@@ -383,6 +457,34 @@ export const config: WebdriverIO.MultiremoteConfig = {
      * @returns {Promise<void>}
      */
     onComplete() {
+        // Clean up duplicate parentSuite labels from Allure results
+        const resultsDir = `${TEST_RESULTS_DIR}/allure-results`;
+        const resultFiles = fs.readdirSync(resultsDir).filter(f => f.endsWith('-result.json'));
+
+        resultFiles.forEach(file => {
+            const filePath = path.join(resultsDir, file);
+            const result = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+            // Keep only the LAST parentSuite label (the manual one with directory name)
+            // Remove the automatic one from WebDriverIO (describe block name)
+            const parentSuiteLabels: any[] = [];
+            const otherLabels: any[] = [];
+
+            result.labels.forEach((label: any) => {
+                if (label.name === 'parentSuite') {
+                    parentSuiteLabels.push(label);
+                } else {
+                    otherLabels.push(label);
+                }
+            });
+
+            // Keep only the last parentSuite (the directory name we manually added)
+            if (parentSuiteLabels.length > 1) {
+                result.labels = [ ...otherLabels, parentSuiteLabels[parentSuiteLabels.length - 1] ];
+                fs.writeFileSync(filePath, JSON.stringify(result));
+            }
+        });
+
         const reportError = new Error('Could not generate Allure report');
         const generation = allure([
             'generate', `${TEST_RESULTS_DIR}/allure-results`,
@@ -404,6 +506,15 @@ export const config: WebdriverIO.MultiremoteConfig = {
                 }
 
                 console.log('Allure report successfully generated');
+
+                // An ugly hack to sort by test order by default in the allure report.
+                const content = fs.readFileSync(`${TEST_RESULTS_DIR}/allure-report/index.html`, 'utf8');
+                const modifiedContent = content.replace('<body>',
+                    '<body><script>localStorage.setItem("ALLURE_REPORT_SETTINGS_SUITES", \'{"treeSorting":{"sorter":"sorter.order","ascending":true}}\')</script>'
+                );
+
+                fs.writeFileSync(`${TEST_RESULTS_DIR}/allure-report/index.html`, modifiedContent);
+
                 resolve();
             });
         });

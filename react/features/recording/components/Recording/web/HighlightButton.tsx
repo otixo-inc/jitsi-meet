@@ -71,7 +71,7 @@ const styles = (theme: Theme) => {
             boxShadow: '0px 6px 20px rgba(0, 0, 0, 0.25)',
             boxSizing: 'border-box' as const,
             color: theme.palette.uiBackground,
-            fontSize: '14px',
+            fontSize: '0.875rem',
             fontWeight: 400,
             left: '4px',
             padding: '16px',
@@ -138,7 +138,7 @@ export class HighlightButton extends AbstractHighlightButton<IProps, IState> {
         const dialogShown = dispatch(maybeShowPremiumFeatureDialog(MEET_FEATURES.RECORDING));
 
         if (!dialogShown) {
-            dispatch(openDialog(StartRecordingDialog));
+            dispatch(openDialog('StartRecordingDialog', StartRecordingDialog));
         }
     }
 

@@ -1,9 +1,10 @@
 import { IReduxState } from '../app/types';
 import { MEET_FEATURES } from '../base/jwt/constants';
 import { isJwtFeatureEnabled } from '../base/jwt/functions';
+import { getParticipantDisplayName } from '../base/participants/functions';
+import { iAmVisitor } from '../visitors/functions';
 
 import { IAnswerData } from './types';
-import { getParticipantById, getParticipantDisplayName } from '../base/participants/functions';
 
 /**
  * Selector creator for determining if poll results should be displayed or not.
@@ -35,29 +36,25 @@ export function getPoll(pollId: string) {
  * @returns {Function}
  */
 export function getPolls() {
-  return function (state: IReduxState) {
-    const { polls } = state['features/polls'];
-    return Object.values(polls).map(poll => {
-      const creatorName = getParticipantDisplayName(state, poll.senderId ?? "");
-      const answers = poll.answers?.map(answer => {
-        const answerVoters = answer.voters?.length ? [...answer.voters] : Object.keys({ ...answer.voters });
-        return {
-          ...answer,
-          voters: answerVoters.map(id => {
+    return function(state: IReduxState) {
+        const { polls } = state['features/polls'];
+
+        return Object.values(polls).map(poll => {
+            const creatorName = getParticipantDisplayName(state, poll.senderId ?? '');
+            const answers = poll.answers?.map(answer => {
+                return {
+                    ...answer,
+                    voters: answer.voters || []
+                };
+            });
+
             return {
-              id,
-              name: getParticipantDisplayName(state, id)
+                ...poll,
+                answers,
+                creatorName
             };
-          })
-        }
-      })
-      return {
-        ...poll,
-        answers,
-        creatorName
-      }
-    })
-  };
+        });
+    };
 }
 
 /**
@@ -67,9 +64,9 @@ export function getPolls() {
  * @returns {number} The number of unread messages.
  */
 export function getUnreadPollCount(state: IReduxState) {
-    const { nbUnreadPolls } = state['features/polls'];
+    const { unreadPollsCount } = state['features/polls'];
 
-    return nbUnreadPolls;
+    return unreadPollsCount;
 }
 
 /**
@@ -104,6 +101,10 @@ export function hasIdenticalAnswers(currentAnswers: Array<IAnswerData>): boolean
  * @returns {boolean} - Returns true if the participant is not allowed to create polls.
  */
 export function isCreatePollDisabled(state: IReduxState) {
+    if (iAmVisitor(state)) {
+        return true;
+    }
+
     const { pollCreationRequiresPermission } = state['features/dynamic-branding'];
 
     if (!pollCreationRequiresPermission) {

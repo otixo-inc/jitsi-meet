@@ -64,34 +64,42 @@ function getBundleAnalyzerPlugin(analyzeBundle, name) {
  */
 function devServerProxyBypass({ path }) {
     /**
-     * We want to return out local version of 
+     * We want to return out local version of
      * external_api.js instead of the version hosted
      * on the server.
-     * 
-     * This way we can locally test any changes we make 
+     *
+     * This way we can locally test any changes we make
      * https://github.com/jitsi/jitsi-meet/issues/6964#issuecomment-1771442496
      */
     if (path === '/external_api.js') {
-      return '/libs/external_api.js';
-    }
-    if (path.startsWith('/css/')
-            || path.startsWith('/doc/')
-            || path.startsWith('/fonts/')
-            || path.startsWith('/images/')
-            || path.startsWith('/lang/')
-            || path.startsWith('/sounds/')
-            || path.startsWith('/static/')
-            || path.endsWith('.wasm')) {
-
-        return path;
+        return '/libs/external_api.js';
     }
 
-    if (path.startsWith('/libs/')) {
-        if (path.endsWith('.min.js') && !fs.existsSync(join(process.cwd(), path))) {
-            return path.replace('.min.js', '.js');
+    let tpath = path;
+
+    if (tpath.startsWith('/v1/_cdn/')) {
+        // The CDN is not available in the dev server, so we need to bypass it.
+        tpath = tpath.replace(/\/v1\/_cdn\/[^/]+\//, '/');
+    }
+
+    if (tpath.startsWith('/css/')
+            || tpath.startsWith('/doc/')
+            || tpath.startsWith('/fonts/')
+            || tpath.startsWith('/images/')
+            || tpath.startsWith('/lang/')
+            || tpath.startsWith('/sounds/')
+            || tpath.startsWith('/static/')
+            || tpath.endsWith('.wasm')) {
+
+        return tpath;
+    }
+
+    if (tpath.startsWith('/libs/')) {
+        if (tpath.endsWith('.min.js') && !fs.existsSync(join(process.cwd(), tpath))) {
+            return tpath.replace('.min.js', '.js');
         }
 
-        return path;
+        return tpath;
     }
 }
 
@@ -164,7 +172,14 @@ function getConfig(options = {}) {
                     'css-loader'
                 ]
             }, {
+                // Import SVG as raw text when using ?raw query parameter.
                 test: /\.svg$/,
+                resourceQuery: /raw/,
+                type: 'asset/source'
+            }, {
+                // Import SVG as React component (default).
+                test: /\.svg$/,
+                resourceQuery: { not: [ /raw/ ] },
                 use: [ {
                     loader: '@svgr/webpack',
                     options: {
@@ -208,7 +223,8 @@ function getConfig(options = {}) {
         ].filter(Boolean),
         resolve: {
             alias: {
-                'focus-visible': 'focus-visible/dist/focus-visible.min.js'
+                'focus-visible': 'focus-visible/dist/focus-visible.min.js',
+                '@giphy/js-analytics': resolve(__dirname, 'giphy-analytics-stub.js')
             },
             aliasFields: [
                 'browser'
@@ -253,7 +269,7 @@ function getDevServerConfig() {
                 warnings: false
             }
         },
-        host: '::',
+        host: 'localhost',
         hot: true,
         proxy: [
             {

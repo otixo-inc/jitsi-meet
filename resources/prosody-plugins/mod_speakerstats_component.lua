@@ -20,13 +20,13 @@ if not have_async then
 end
 
 local muc_component_host = module:get_option_string("muc_component");
-local muc_domain_base = module:get_option_string("muc_mapper_domain_base");
+local main_virtual_host = module:get_option_string("muc_mapper_domain_base");
 
-if muc_component_host == nil or muc_domain_base == nil then
+if muc_component_host == nil or main_virtual_host == nil then
     module:log("error", "No muc_component specified. No muc to operate on!");
     return;
 end
-local breakout_room_component_host = "breakout." .. muc_domain_base;
+local breakout_room_component_host = "breakout." .. main_virtual_host;
 
 module:log("info", "Starting speakerstats for %s", muc_component_host);
 
@@ -331,7 +331,7 @@ function process_main_muc_loaded(main_muc, host_module)
     host_module:hook("muc-room-created", room_created, -1);
     host_module:hook("muc-occupant-joined", occupant_joined, -1);
     host_module:hook("muc-occupant-pre-leave", occupant_leaving, -1);
-    host_module:hook("muc-room-destroyed", room_destroyed, -1);
+    host_module:hook("muc-room-destroyed", room_destroyed, 1); -- prosody handles it at 0
 end
 
 function process_breakout_muc_loaded(breakout_muc, host_module)
@@ -340,7 +340,7 @@ function process_breakout_muc_loaded(breakout_muc, host_module)
     host_module:hook("muc-room-created", breakout_room_created, -1);
     host_module:hook("muc-occupant-joined", occupant_joined, -1);
     host_module:hook("muc-occupant-pre-leave", occupant_leaving, -1);
-    host_module:hook("muc-room-destroyed", room_destroyed, -1);
+    host_module:hook("muc-room-destroyed", room_destroyed, 1); -- prosody handles it at 0
 end
 
 -- process or waits to process the conference muc component
@@ -375,4 +375,10 @@ process_host_module(breakout_room_component_host, function(host_module, host)
             end
         end);
     end
+end);
+
+process_host_module(main_virtual_host, function(host_module)
+    module:context(host_module.host):fire_event('jitsi-add-identity', {
+        name = 'speakerstats'; host = module.host;
+    });
 end);

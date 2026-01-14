@@ -5,9 +5,9 @@ import Button from '../../../base/ui/components/web/Button';
 import AbstractPollsPane, { AbstractProps } from '../AbstractPollsPane';
 
 import PollCreate from './PollCreate';
+import PollsDownload from './PollsDownload';
 import PollsList from './PollsList';
 /* eslint-enable lines-around-comment */
-import PollsDownload from './PollsDownload';
 
 const useStyles = makeStyles()(() => {
     return {
@@ -38,15 +38,14 @@ const PollsPane = ({ createMode, isCreatePollsDisabled, onCreate, setCreateMode,
             <div className = { classes.listContainer } >
                 <PollsList setCreateMode = { setCreateMode } />
             </div>
-            <div className = { classes.footer }>
+            { !isCreatePollsDisabled && <div className = { classes.footer }>
                 <Button
                     accessibilityLabel = { t('polls.create.create') }
-                    disabled = { isCreatePollsDisabled }
                     fullWidth = { true }
                     labelKey = { 'polls.create.create' }
                     onClick = { onCreate } />
                 <PollsDownload />
-            </div>
+            </div>}
         </div>;
 };
 

@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
+import { IReduxState } from '../../../app/types';
+import { openDialog } from '../../../base/dialog/actions';
 import Icon from '../../../base/icons/components/Icon';
 import { IconSubtitles } from '../../../base/icons/svg';
-import { withPixelLineHeight } from '../../../base/styles/functions.web';
 import Button from '../../../base/ui/components/web/Button';
 import { groupMessagesBySender } from '../../../base/util/messageGrouping';
+import { StartRecordingDialog } from '../../../recording/components/Recording';
 import { setRequestingSubtitles } from '../../../subtitles/actions.any';
 import LanguageSelector from '../../../subtitles/components/web/LanguageSelector';
 import { canStartSubtitles } from '../../../subtitles/functions.any';
@@ -15,7 +17,6 @@ import { ISubtitle } from '../../../subtitles/types';
 import { isTranscribing } from '../../../transcribing/functions';
 
 import { SubtitlesMessagesContainer } from './SubtitlesMessagesContainer';
-import { IReduxState } from '../../../app/types';
 
 /**
  * The styles for the ClosedCaptionsTab component.
@@ -67,7 +68,7 @@ const useStyles = makeStyles()(theme => {
             }
         },
         emptyState: {
-            ...withPixelLineHeight(theme.typography.bodyLongBold),
+            ...theme.typography.bodyLongBold,
             color: theme.palette.text02
         }
     };
@@ -89,6 +90,8 @@ export default function ClosedCaptionsTab() {
     const _canStartSubtitles = useSelector(canStartSubtitles);
     const [ isButtonPressed, setButtonPressed ] = useState(false);
     const subtitlesError = useSelector((state: IReduxState) => state['features/subtitles']._hasError);
+    const isAsyncTranscriptionEnabled = useSelector((state: IReduxState) =>
+        state['features/base/conference'].conference?.getMetadataHandler()?.getMetadata()?.asyncTranscription);
 
     const filteredSubtitles = useMemo(() => {
         // First, create a map of transcription messages by message ID
@@ -122,14 +125,21 @@ export default function ClosedCaptionsTab() {
         groupMessagesBySender(filteredSubtitles), [ filteredSubtitles ]);
 
     const startClosedCaptions = useCallback(() => {
-        if (isButtonPressed) {
-            return;
+        if (isAsyncTranscriptionEnabled) {
+            dispatch(openDialog('StartRecordingDialog', StartRecordingDialog, {
+                recordAudioAndVideo: false
+            }));
+        } else {
+            if (isButtonPressed) {
+                return;
+            }
+            dispatch(setRequestingSubtitles(true, false, null));
+            setButtonPressed(true);
         }
-        dispatch(setRequestingSubtitles(true, false, null));
-        setButtonPressed(true);
-    }, [ dispatch, isButtonPressed, setButtonPressed ]);
 
-    if (subtitlesError && isButtonPressed) {
+    }, [ isAsyncTranscriptionEnabled, dispatch, isButtonPressed, openDialog, setButtonPressed ]);
+
+    if (subtitlesError && isButtonPressed && !isAsyncTranscriptionEnabled) {
         setButtonPressed(false);
     }
 
@@ -149,7 +159,7 @@ export default function ClosedCaptionsTab() {
             );
         }
 
-        if (isButtonPressed) {
+        if (isButtonPressed && !isAsyncTranscriptionEnabled) {
             setButtonPressed(false);
         }
 
@@ -166,7 +176,7 @@ export default function ClosedCaptionsTab() {
         );
     }
 
-    if (isButtonPressed) {
+    if (isButtonPressed && !isAsyncTranscriptionEnabled) {
         setButtonPressed(false);
     }
 

@@ -13,14 +13,12 @@ import {
     requestEnableAudioModeration,
     requestEnableVideoModeration
 } from '../../react/features/av-moderation/actions';
-import { isEnabledFromState } from '../../react/features/av-moderation/functions';
+import { isEnabledFromState, isForceMuted } from '../../react/features/av-moderation/functions';
 import { setAudioOnly } from '../../react/features/base/audio-only/actions';
 import {
     endConference,
     sendTones,
     setAssumedBandwidthBps,
-    setFollowMe,
-    setFollowMeRecorder,
     setLocalSubject,
     setPassword,
     setSubject
@@ -30,6 +28,7 @@ import { overwriteConfig } from '../../react/features/base/config/actions';
 import { getWhitelistedJSON } from '../../react/features/base/config/functions.any';
 import { toggleDialog } from '../../react/features/base/dialog/actions';
 import { isSupportedBrowser } from '../../react/features/base/environment/environment';
+import { isMobileBrowser } from '../../react/features/base/environment/utils';
 import { parseJWTFromURLParams } from '../../react/features/base/jwt/functions';
 import JitsiMeetJS, { JitsiRecordingConstants } from '../../react/features/base/lib-jitsi-meet';
 import { MEDIA_TYPE, VIDEO_TYPE } from '../../react/features/base/media/constants';
@@ -90,6 +89,7 @@ import {
     togglePinStageParticipant
 } from '../../react/features/filmstrip/actions.web';
 import { getPinnedActiveParticipants, isStageFilmstripAvailable } from '../../react/features/filmstrip/functions.web';
+import { setFollowMe, setFollowMeRecorder } from '../../react/features/follow-me/actions';
 import { invite } from '../../react/features/invite/actions.any';
 import {
     selectParticipantInLargeVideo
@@ -106,13 +106,18 @@ import {
     close as closeParticipantsPane,
     open as openParticipantsPane
 } from '../../react/features/participants-pane/actions';
-import { getParticipantsPaneOpen, isForceMuted } from '../../react/features/participants-pane/functions';
+import { getParticipantsPaneOpen } from '../../react/features/participants-pane/functions';
+import { hidePiP, showPiP } from '../../react/features/pip/actions';
 import { startLocalVideoRecording, stopLocalVideoRecording } from '../../react/features/recording/actions.any';
-import { RECORDING_METADATA_ID, RECORDING_TYPES } from '../../react/features/recording/constants';
+import { grantRecordingConsent, grantRecordingConsentAndUnmute } from '../../react/features/recording/actions.web';
+import { RECORDING_TYPES } from '../../react/features/recording/constants';
 import { getActiveSession, supportsLocalRecording } from '../../react/features/recording/functions';
 import { startAudioScreenShareFlow, startScreenShareFlow } from '../../react/features/screen-share/actions';
 import { isScreenAudioSupported } from '../../react/features/screen-share/functions';
-import { toggleScreenshotCaptureSummary } from '../../react/features/screenshot-capture/actions';
+import {
+    openCameraCaptureDialog,
+    toggleScreenshotCaptureSummary
+} from '../../react/features/screenshot-capture/actions';
 import { isScreenshotCaptureEnabled } from '../../react/features/screenshot-capture/functions';
 import SettingsDialog from '../../react/features/settings/components/web/SettingsDialog';
 import { SETTINGS_TABS } from '../../react/features/settings/constants';
@@ -121,7 +126,7 @@ import { extractYoutubeIdOrURL } from '../../react/features/shared-video/functio
 import { setRequestingSubtitles, toggleRequestingSubtitles } from '../../react/features/subtitles/actions';
 import { isAudioMuteButtonDisabled } from '../../react/features/toolbox/functions';
 import { setTileView, toggleTileView } from '../../react/features/video-layout/actions.any';
-import { muteAllParticipants } from '../../react/features/video-menu/actions';
+import { muteAllParticipants, muteRemote } from '../../react/features/video-menu/actions';
 import { setVideoQuality } from '../../react/features/video-quality/actions';
 import { toggleBackgroundEffect, toggleBlurredBackgroundEffect } from '../../react/features/virtual-background/actions';
 import { VIRTUAL_BACKGROUND_TYPE } from '../../react/features/virtual-background/constants';
@@ -133,7 +138,7 @@ import {
     ENDPOINT_TEXT_MESSAGE_NAME
 } from './constants';
 
-const logger = Logger.getLogger(__filename);
+const logger = Logger.getLogger('api:core');
 
 /**
  * List of the available commands.
@@ -209,6 +214,10 @@ function initCommands() {
             }
             APP.store.dispatch(grantModerator(participantId));
         },
+        'grant-recording-consent': unmute => {
+            unmute ? APP.store.dispatch(grantRecordingConsentAndUnmute())
+                : APP.store.dispatch(grantRecordingConsent());
+        },
         'display-name': displayName => {
             sendAnalytics(createApiEvent('display.name.changed'));
             APP.store.dispatch(updateSettings({ displayName: getNormalizedDisplayName(displayName) }));
@@ -229,6 +238,17 @@ function initCommands() {
             }
 
             APP.store.dispatch(muteAllParticipants(exclude, muteMediaType));
+        },
+        'mute-remote-participant': (participantId, mediaType) => {
+            if (!isLocalParticipantModerator(APP.store.getState())) {
+                logger.error('Missing moderator rights to mute remote participant');
+
+                return;
+            }
+
+            const muteMediaType = mediaType ? mediaType : MEDIA_TYPE.AUDIO;
+
+            APP.store.dispatch(muteRemote(participantId, muteMediaType));
         },
         'toggle-lobby': isLobbyEnabled => {
             APP.store.dispatch(toggleLobbyMode(isLobbyEnabled));
@@ -332,6 +352,7 @@ function initCommands() {
 
             APP.store.dispatch(setAssumedBandwidthBps(value));
         },
+
         'set-blurred-background': blurType => {
             const tracks = APP.store.getState()['features/base/tracks'];
             const videoTrack = getLocalVideoTrack(tracks)?.jitsiTrack;
@@ -769,10 +790,7 @@ function initCommands() {
             }
 
             if (transcription) {
-                APP.store.dispatch(setRequestingSubtitles(true, false, null, true));
-                conference.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
-                    isTranscribingEnabled: true
-                });
+                APP.store.dispatch(setRequestingSubtitles(true, false, null));
             }
         },
 
@@ -795,9 +813,6 @@ function initCommands() {
 
             if (transcription) {
                 APP.store.dispatch(setRequestingSubtitles(false, false, null));
-                conference.getMetadataHandler().setMetadata(RECORDING_METADATA_ID, {
-                    isTranscribingEnabled: false
-                });
             }
 
             if (mode === 'local') {
@@ -898,6 +913,12 @@ function initCommands() {
                 backgroundType: VIRTUAL_BACKGROUND_TYPE.IMAGE,
                 virtualSource: backgroundImage
             }, jitsiTrack));
+        },
+        'show-pip': () => {
+            APP.store.dispatch(showPiP());
+        },
+        'hide-pip': () => {
+            APP.store.dispatch(hidePiP());
         }
     };
     transport.on('event', ({ data, name }) => {
@@ -935,6 +956,20 @@ function initCommands() {
                     });
                 });
             break;
+        case 'capture-camera-picture' : {
+            const { cameraFacingMode, descriptionText, titleText } = request;
+
+            if (!isMobileBrowser()) {
+                logger.error('This feature is only supported on mobile');
+
+                return;
+            }
+
+            APP.store.dispatch(openCameraCaptureDialog(callback, { cameraFacingMode,
+                descriptionText,
+                titleText }));
+            break;
+        }
         case 'deployment-info':
             callback(APP.store.getState()['features/base/config'].deploymentInfo);
             break;
@@ -1220,6 +1255,20 @@ class API {
     }
 
     /**
+     * Notify external application (if API is enabled) that the in-page toolbox
+     * visibility changed.
+     *
+     * @param {boolean} visible - True if the toolbox is visible, false otherwise.
+     * @returns {void}
+     */
+    notifyToolbarVisibilityChanged(visible) {
+        this._sendEvent({
+            name: 'toolbar-visibility-changed',
+            visible
+        });
+    }
+
+    /**
      * Notifies the external application (spot) that the local jitsi-participant
      * has a status update.
      *
@@ -1360,6 +1409,25 @@ class API {
             name: 'moderation-participant-rejected',
             id: participantId,
             mediaType
+        });
+    }
+
+    /**
+     * Notify the external application that a participant's mute status changed.
+     *
+     * @param {string} participantId - The ID of the participant.
+     * @param {boolean} isMuted - True if muted, false if unmuted.
+     * @param {string} mediaType - Media type that was muted ('audio', 'video', or 'desktop').
+     * @param {boolean} isSelfMuted - True if participant muted themselves, false if muted by moderator.
+     * @returns {void}
+     */
+    notifyParticipantMuted(participantId, isMuted, mediaType, isSelfMuted = true) {
+        this._sendEvent({
+            name: 'participant-muted',
+            id: participantId,
+            isMuted,
+            mediaType,
+            isSelfMuted
         });
     }
 
@@ -1919,6 +1987,19 @@ class API {
     }
 
     /**
+     * Notify external application (if API is enabled) that the recording consent dialog open state has changed.
+     *
+     * @param {boolean} open - True if the dialog is open, false otherwise.
+     * @returns {void}
+     */
+    notifyRecordingConsentDialogOpen(open) {
+        this._sendEvent({
+            name: 'recording-consent-dialog-open',
+            open
+        });
+    }
+
+    /**
      * Notify external application of the current meeting requiring a password
      * to join.
      *
@@ -2196,6 +2277,40 @@ class API {
             name: 'peer-connection-failure',
             isP2P,
             wasConnected
+        });
+    }
+
+    /**
+     * Notify external application (if API is enabled) that Picture-in-Picture was requested.
+     * Used by Electron to handle PiP requests with proper user gesture context.
+     *
+     * @returns {void}
+     */
+    notifyPictureInPictureRequested() {
+        this._sendEvent({
+            name: '_pip-requested'
+        });
+    }
+
+    /**
+     * Notify external application (if API is enabled) that Picture-in-Picture mode was entered.
+     *
+     * @returns {void}
+     */
+    notifyPictureInPictureEntered() {
+        this._sendEvent({
+            name: 'pip-entered'
+        });
+    }
+
+    /**
+     * Notify external application (if API is enabled) that Picture-in-Picture mode was exited.
+     *
+     * @returns {void}
+     */
+    notifyPictureInPictureLeft() {
+        this._sendEvent({
+            name: 'pip-left'
         });
     }
 
