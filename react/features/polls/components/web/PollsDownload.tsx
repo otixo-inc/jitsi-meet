@@ -18,6 +18,7 @@ import {
 // @ts-ignore
 import { getPolls } from '../../functions';
 
+// @ts-ignore
 import { convertPollsToText } from './convertPollsToText';
 
 
