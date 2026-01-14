@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import { makeStyles } from 'tss-react/mui';
 
-import { withPixelLineHeight } from '../../../base/styles/functions';
+import { hangup } from '../../../base/connection/actions.web';
+import Button from '../../../base/ui/components/web/Button';
 import LoadingIndicator from '../../../base/ui/components/web/Spinner';
 
 const useStyles = makeStyles()(theme => {
@@ -54,7 +56,7 @@ const useStyles = makeStyles()(theme => {
             width: '100%'
         },
         roomName: {
-            ...withPixelLineHeight(theme.typography.heading5),
+            ...theme.typography.heading5,
             color: theme.palette.text01,
             marginBottom: theme.spacing(4),
             overflow: 'hidden',
@@ -64,7 +66,7 @@ const useStyles = makeStyles()(theme => {
             width: '100%'
         },
         spinner: {
-            margin: '8px'
+            margin: theme.spacing(4),
         }
     };
 });
@@ -77,6 +79,11 @@ const useStyles = makeStyles()(theme => {
 export default function VisitorsQueue() {
     const { classes } = useStyles();
     const { t } = useTranslation();
+    const dispatch = useDispatch();
+
+    const onHangupClick = useCallback(() => {
+        dispatch(hangup());
+    }, []);
 
     return (<div
         className = { classes.container }
@@ -89,6 +96,11 @@ export default function VisitorsQueue() {
                 <div className = { classes.spinner }>
                     <LoadingIndicator size = 'large' />
                 </div>
+                <Button
+                    labelKey = 'toolbar.accessibilityLabel.leaveConference'
+                    onClick = { onHangupClick }
+                    testId = 'toolbar.accessibilityLabel.leaveConference'
+                    type = 'destructive' />
             </div>
         </div>
     </div>);

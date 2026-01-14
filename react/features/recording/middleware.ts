@@ -36,8 +36,8 @@ import { isRecorderTranscriptionsRunning } from '../transcribing/functions';
 import { RECORDING_SESSION_UPDATED, START_LOCAL_RECORDING, STOP_LOCAL_RECORDING } from './actionTypes';
 import {
     clearRecordingSessions,
-    markConsentRequested,
     hidePendingRecordingNotification,
+    markConsentRequested,
     showPendingRecordingNotification,
     showRecordingError,
     showRecordingLimitNotification,
@@ -427,6 +427,6 @@ function _showExplicitConsentDialog(recorderSession: any, dispatch: IStore['disp
         dispatch(setVideoUnmutePermissions(true, true));
         dispatch(setAudioMuted(true));
         dispatch(setVideoMuted(true));
-        dispatch(openDialog(RecordingConsentDialog));
+        dispatch(openDialog('RecordingConsentDialog', RecordingConsentDialog));
     });
 }

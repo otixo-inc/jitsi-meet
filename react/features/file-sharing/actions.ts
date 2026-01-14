@@ -1,9 +1,9 @@
 import {
     ADD_FILE,
+    DOWNLOAD_FILE,
     REMOVE_FILE,
     UPDATE_FILE_UPLOAD_PROGRESS,
-    UPLOAD_FILES,
-    DOWNLOAD_FILE
+    UPLOAD_FILES
 } from './actionTypes';
 import { IFileMetadata } from './types';
 
@@ -39,17 +39,19 @@ export function updateFileProgress(fileId: string, progress: number) {
  * Add a file.
  *
  * @param {IFileMetadata} file - The file to add to the state.
+ * @param {boolean} shouldIncrementUnread - Whether to increment the unread count.
  * @returns {Object}
  */
-export function addFile(file: IFileMetadata) {
+export function addFile(file: IFileMetadata, shouldIncrementUnread = false) {
     return {
         type: ADD_FILE,
-        file
+        file,
+        shouldIncrementUnread
     };
 }
 
 /**
- * Remove a file.
+ * Remove a file from the backend.
  *
  * @param {string} fileId - The ID of the file to remove.
  * @returns {Object}

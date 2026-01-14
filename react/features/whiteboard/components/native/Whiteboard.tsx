@@ -152,7 +152,7 @@ class Whiteboard extends PureComponent<IProps> {
      * @returns {void}
      */
     _onError() {
-        this.props.dispatch(openDialog(WhiteboardErrorDialog));
+        this.props.dispatch(openDialog('WhiteboardErrorDialog', WhiteboardErrorDialog));
     }
 
     /**
@@ -228,7 +228,7 @@ class Whiteboard extends PureComponent<IProps> {
 
 /**
  * Maps (parts of) the redux state to the associated
- * {@code WaitForOwnerDialog}'s props.
+ * {@code Whiteboard}'s props.
  *
  * @param {Object} state - The redux state.
  * @private

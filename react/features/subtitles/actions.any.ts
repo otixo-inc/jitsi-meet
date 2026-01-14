@@ -4,10 +4,10 @@ import {
     REMOVE_CACHED_TRANSCRIPT_MESSAGE,
     REMOVE_TRANSCRIPT_MESSAGE,
     SET_REQUESTING_SUBTITLES,
+    SET_SUBTITLES_ERROR,
     STORE_SUBTITLE,
     TOGGLE_REQUESTING_SUBTITLES,
-    UPDATE_TRANSCRIPT_MESSAGE,
-    SET_SUBTITLES_ERROR
+    UPDATE_TRANSCRIPT_MESSAGE
 } from './actionTypes';
 import { ISubtitle } from './types';
 
@@ -95,11 +95,9 @@ export function toggleRequestingSubtitles() {
 export function setRequestingSubtitles(
         enabled: boolean,
         displaySubtitles = true,
-        language: string | null = `translation-languages:${DEFAULT_LANGUAGE}`,
-        backendRecordingOn = false) {
+        language: string | null = `translation-languages:${DEFAULT_LANGUAGE}`) {
     return {
         type: SET_REQUESTING_SUBTITLES,
-        backendRecordingOn,
         displaySubtitles,
         enabled,
         language

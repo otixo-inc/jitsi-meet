@@ -1,3 +1,5 @@
+import { Theme } from '@mui/material/styles';
+
 import { IReduxState } from '../app/types';
 import { IStateful } from '../base/app/types';
 import { isMobileBrowser } from '../base/environment/utils';
@@ -81,13 +83,13 @@ export function shouldRemoteVideosBeVisible(state: IReduxState) {
     // in the filmstrip.
     const participantCount = getParticipantCountWithFake(state);
     let pinnedParticipant;
-    const { disable1On1Mode } = state['features/base/config'];
+    const { disable1On1Mode, filmstrip: { alwaysShowResizeBar } = {} } = state['features/base/config'];
     const { contextMenuOpened } = state['features/base/responsive-ui'];
 
     return Boolean(
         contextMenuOpened
             || participantCount > 2
-
+            || alwaysShowResizeBar
             // Always show the filmstrip when there is another participant to
             // show and the  local video is pinned, or the toolbar is displayed.
             || (participantCount > 1
@@ -829,4 +831,14 @@ export function isTopPanelEnabled(state: IReduxState) {
 
     return !filmstrip?.disableTopPanel && participantsCount >= (filmstrip?.minParticipantCountForTopPanel ?? 50);
 
+}
+
+/**
+ * Returns the thumbnail background color from the theme.
+ *
+ * @param {Theme} theme - The MUI theme.
+ * @returns {string} The background color.
+ */
+export function getThumbnailBackgroundColor(theme: Theme): string {
+    return theme.palette.uiBackground;
 }

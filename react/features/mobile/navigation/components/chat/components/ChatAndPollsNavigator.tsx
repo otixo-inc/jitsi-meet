@@ -4,7 +4,6 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { IReduxState } from '../../../../../app/types';
 import {
     getClientHeight,
     getClientWidth
@@ -12,7 +11,8 @@ import {
 import { setFocusedTab } from '../../../../../chat/actions.any';
 import Chat from '../../../../../chat/components/native/Chat';
 import { ChatTabs } from '../../../../../chat/constants';
-import { resetNbUnreadPollsMessages } from '../../../../../polls/actions';
+import { getFocusedTab } from '../../../../../chat/functions';
+import { resetUnreadPollsCount } from '../../../../../polls/actions';
 import PollsPane from '../../../../../polls/components/native/PollsPane';
 import { screen } from '../../../routes';
 import { chatTabBarOptions } from '../../../screenOptions';
@@ -23,8 +23,8 @@ const ChatAndPolls = () => {
     const clientHeight = useSelector(getClientHeight);
     const clientWidth = useSelector(getClientWidth);
     const dispatch = useDispatch();
-    const { focusedTab } = useSelector((state: IReduxState) => state['features/chat']);
-    const initialRouteName = focusedTab === ChatTabs.POLLS
+    const currentFocusedTab = useSelector(getFocusedTab);
+    const initialRouteName = currentFocusedTab === ChatTabs.POLLS
         ? screen.conference.chatandpolls.tab.polls
         : screen.conference.chatandpolls.tab.chat;
 
@@ -51,7 +51,7 @@ const ChatAndPolls = () => {
                 listeners = {{
                     tabPress: () => {
                         dispatch(setFocusedTab(ChatTabs.POLLS));
-                        dispatch(resetNbUnreadPollsMessages);
+                        dispatch(resetUnreadPollsCount);
                     }
                 }}
                 name = { screen.conference.chatandpolls.tab.polls } />
