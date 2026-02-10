@@ -53,7 +53,7 @@ if (RNCallKit) {
                 // the same to us as performEndCallAction.
                 eventEmitter.addListener(
                     'providerDidReset',
-                    delegate._onPerformEndCallAction,
+                    delegate._onProviderDidReset,
                     context)
             ];
         }

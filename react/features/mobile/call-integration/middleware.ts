@@ -115,7 +115,8 @@ function _appWillMount({ dispatch, getState }: IStore, next: Function, action: A
 
     const delegate = {
         _onPerformSetMutedCallAction,
-        _onPerformEndCallAction
+        _onPerformEndCallAction,
+        _onProviderDidReset
     };
 
     if (isCallIntegrationEnabled(getState)) {
@@ -357,6 +358,29 @@ function _handleConnectionServiceFailure(state: IReduxState) {
             // Set the desired audio mode, since we just reset the whole thing.
             AudioMode.setMode(hasVideo ? AudioMode.VIDEO_CALL : AudioMode.AUDIO_CALL);
         }
+    }
+}
+
+/**
+ * Handles CallKit's event {@code providerDidReset}.
+ *
+ * @param {Object} provider - The details of the CXCallProvider
+ * {@code providerDidReset}.
+ * @returns {void}
+ */
+function _onProviderDidReset() {
+    // @ts-ignore
+    const { dispatch, getState } = this; // eslint-disable-line @typescript-eslint/no-invalid-this
+    const conference = getCurrentConference(getState);
+
+    if (conference?.callUUID) {
+        // We arrive here when a telephony service has failed.
+        // We should terminate all calls. Hence, providerDidReset is
+        // the same to us as performEndCallAction.
+
+        delete conference.callUUID;
+
+        dispatch(appNavigate(undefined));
     }
 }
 
