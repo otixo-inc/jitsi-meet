@@ -52,11 +52,10 @@ if (CallKit) {
                     context),
 
                 // According to CallKit's documentation, when the system resets
-                // we should terminate all calls. Hence, providerDidReset is
-                // the same to us as performEndCallAction.
+                // we should terminate all calls.
                 CallKit.addListener(
                     'providerDidReset',
-                    delegate._onPerformEndCallAction,
+                    delegate._onProviderDidReset,
                     context)
             ];
         }
