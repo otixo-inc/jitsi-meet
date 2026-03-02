@@ -561,6 +561,7 @@ export interface IConfig {
         skipConsentInMeeting?: boolean;
         suggestRecording?: boolean;
     };
+    reducedUIEnabled?: boolean;
     reducedUImainToolbarButtons?: Array<string>;
     remoteVideoMenu?: {
         disableDemote?: boolean;
