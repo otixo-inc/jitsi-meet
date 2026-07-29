@@ -1,6 +1,5 @@
 /* global APP $ */
 
-import { multiremotebrowser } from '@wdio/globals';
 import assert from 'assert';
 import { Key } from 'webdriverio';
 
@@ -8,6 +7,7 @@ import { IConfig } from '../../react/features/base/config/configType';
 import { urlObjectToString } from '../../react/features/base/util/uri';
 import BreakoutRooms from '../pageobjects/BreakoutRooms';
 import ChatPanel from '../pageobjects/ChatPanel';
+import FileSharingPanel from '../pageobjects/FileSharingPanel';
 import Filmstrip from '../pageobjects/Filmstrip';
 import IframeAPI from '../pageobjects/IframeAPI';
 import InviteDialog from '../pageobjects/InviteDialog';
@@ -25,6 +25,7 @@ import SecurityDialog from '../pageobjects/SecurityDialog';
 import SettingsDialog from '../pageobjects/SettingsDialog';
 import Toolbar from '../pageobjects/Toolbar';
 import VideoQualityDialog from '../pageobjects/VideoQualityDialog';
+import VirtualBackgroundDialog from '../pageobjects/VirtualBackgroundDialog';
 import Visitors from '../pageobjects/Visitors';
 
 import { LOG_PREFIX, logInfo } from './browserLogger';
@@ -35,6 +36,8 @@ export const P1 = 'p1';
 export const P2 = 'p2';
 export const P3 = 'p3';
 export const P4 = 'p4';
+export const P5 = 'p5';
+export const P6 = 'p6';
 
 /**
  * Participant.
@@ -112,9 +115,6 @@ export class Participant {
             useStunTurn: false
         },
         pcStatsInterval: 1500,
-        prejoinConfig: {
-            enabled: false
-        },
         toolbarConfig: {
             alwaysVisible: true
         }
@@ -175,7 +175,7 @@ export class Participant {
      * The driver it uses.
      */
     get driver() {
-        return multiremotebrowser.getInstance(this._name);
+        return multiRemoteBrowser.getInstance(this._name);
     }
 
     /**
@@ -252,13 +252,52 @@ export class Participant {
             // For the iFrame API the tenant is passed in a different way.
             url = `/${options.tenant}/${url}`;
         }
+        if (options.urlAppendString) {
+            url = `${url}${options.urlAppendString}`;
+        }
 
         await this.driver.url(url);
 
         await this.waitForPageToLoad();
 
+        // If the URL changed, wait for the new page to load before proceeding.
+        const currentUrl = await this.driver.getUrl();
+
+        if (!currentUrl.includes(url)) {
+            await this.waitForPageToLoad();
+        }
+
         if (this._iFrameApi) {
             await this.switchToIFrame();
+        }
+
+        if (!options.skipPrejoinButtonClick
+            // @ts-ignore
+            && !Boolean(await this.execute(() => config.prejoinConfig?.enabled === false))) {
+            // For iFrame API tests, the wrapper page's iframeAPI.onload fires before the embedded Jitsi
+            // app inside the iframe has finished its own init, so the prejoin Join button can be in the
+            // DOM with no React click handler attached yet. APP.store is created during conference.init,
+            // which is also when prejoin's handlers mount; gating the click on it avoids the race.
+            if (this._iFrameApi) {
+                await this.driver.waitUntil(
+                    // @ts-ignore
+                    () => this.execute(() => typeof APP !== 'undefined' && Boolean(APP.store)),
+                    {
+                        timeout: 30_000,
+                        timeoutMsg: `Timeout waiting for embedded Jitsi app to initialize for ${this._name}.`
+                    }
+                );
+            }
+
+            // if prejoin is enabled we want to click the join button
+            const p1PreJoinScreen = this.getPreJoinScreen();
+
+            await p1PreJoinScreen.waitForLoading();
+
+            const joinButton = p1PreJoinScreen.getJoinButton();
+
+            await joinButton.waitForDisplayed();
+            await joinButton.click();
         }
 
         if (!options.skipWaitToJoin) {
@@ -357,7 +396,7 @@ export class Participant {
                 || await this.getNotifications().getNotificationText(TOKEN_AUTH_FAILED_TEST_ID)
                 || await this.getNotifications().getNotificationText(TOKEN_AUTH_FAILED_TITLE_TEST_ID);
         }, {
-            timeout: 10_000,
+            timeout: 30_000,
             timeoutMsg: 'Timeout waiting for MUC joined or error.'
         });
     }
@@ -496,7 +535,7 @@ export class Participant {
     }
 
     /**
-     * Waits until the number of participants is exactly the given number.
+     * Waits until the number of remote participants is exactly the given number.
      *
      * @param {number} number - The number of participant to wait for.
      * @param {string} msg - A custom message to use.
@@ -504,7 +543,7 @@ export class Participant {
      */
     waitForParticipants(number: number, msg?: string): Promise<boolean> {
         return this.driver.waitUntil(
-            () => this.execute(count => (APP?.conference?.listMembers()?.length ?? -1) === count, number),
+            () => this.execute(count => (window.APP?.conference?.listMembers()?.length ?? -1) === count, number),
             {
                 timeout: 15_000,
                 timeoutMsg: msg || `not the expected participants ${number} in 15s for ${this.name}`
@@ -516,6 +555,13 @@ export class Participant {
      */
     getChatPanel(): ChatPanel {
         return new ChatPanel(this);
+    }
+
+    /**
+     * Returns the file sharing panel for this participant.
+     */
+    getFileSharingPanel(): FileSharingPanel {
+        return new FileSharingPanel(this);
     }
 
     /**
@@ -614,6 +660,13 @@ export class Participant {
     }
 
     /**
+     * Returns the virtual background dialog.
+     */
+    getVirtualBackgroundDialog(): VirtualBackgroundDialog {
+        return new VirtualBackgroundDialog(this);
+    }
+
+    /**
      * Returns the prejoin screen.
      */
     getPreJoinScreen(): PreJoinScreen {
@@ -672,6 +725,10 @@ export class Participant {
      */
     getIframeAPI() {
         return new IframeAPI(this);
+    }
+
+    async getRoomMetadata() {
+        return this.execute(() => window.APP?.conference?._room?.getMetadataHandler()?.getMetadata());
     }
 
     /**

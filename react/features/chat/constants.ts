@@ -19,19 +19,36 @@ export const INCOMING_MSG_SOUND_ID = 'INCOMING_MSG_SOUND';
 /**
  * The {@code messageType} of error (system) messages.
  */
-export const MESSAGE_TYPE_ERROR = 'error';
+export const MESSAGE_TYPE_ERROR = 'error' as const;
 
 /**
  * The {@code messageType} of local messages.
  */
-export const MESSAGE_TYPE_LOCAL = 'local';
+export const MESSAGE_TYPE_LOCAL = 'local' as const;
 
 /**
  * The {@code messageType} of remote messages.
  */
-export const MESSAGE_TYPE_REMOTE = 'remote';
+export const MESSAGE_TYPE_REMOTE = 'remote' as const;
 
 export const SMALL_WIDTH_THRESHOLD = 580;
+
+/**
+ * Drag handle dimensions for resizable chat.
+ */
+export const CHAT_DRAG_HANDLE_WIDTH = 9;
+export const CHAT_DRAG_HANDLE_HEIGHT = 100;
+
+/**
+ * Touch target size for chat drag handle on touch devices.
+ * Provides adequate hit area (44px) for comfortable tapping.
+ */
+export const CHAT_TOUCH_HANDLE_SIZE = 44;
+
+/**
+ * Offset from edge for positioning the chat drag handle.
+ */
+export const CHAT_DRAG_HANDLE_OFFSET = 4;
 
 
 /**

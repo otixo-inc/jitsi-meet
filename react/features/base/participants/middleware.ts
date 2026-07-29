@@ -545,6 +545,15 @@ StateListenerRegistry.register(
                         propertyHandlers[propertyName](participant, newValue);
                     }
                 });
+            conference.on(JitsiConferenceEvents.PERMISSIONS_RECEIVED, (p: Object) => {
+                const localParticipant = getLocalParticipant(store.getState());
+
+                localParticipant && store.dispatch(participantUpdated({
+                    id: localParticipant.id,
+                    local: true,
+                    features: p
+                }));
+            });
         } else {
             const localParticipantId = getLocalParticipant(store.getState)?.id;
 
@@ -606,13 +615,16 @@ function _e2eeUpdated({ getState, dispatch }: IStore, conference: IJitsiConferen
 function _localParticipantJoined({ getState, dispatch }: IStore, next: Function, action: AnyAction) {
     const result = next(action);
 
-    const settings = getState()['features/base/settings'];
+    const state = getState();
+    const settings = state['features/base/settings'];
+    const jwtUser = state['features/base/jwt']?.user;
 
     dispatch(localParticipantJoined({
         avatarURL: settings.avatarURL,
         email: settings.email,
         name: settings.displayName,
-        id: ''
+        id: '',
+        userContext: jwtUser
     }));
 
     return result;
@@ -777,8 +789,9 @@ function _localRecordingUpdated({ dispatch, getState }: IStore, conference: IJit
         participantId: string, newValue: boolean) {
     const state = getState();
     const participant = getParticipantById(state, participantId);
+    const currentValue = participant?.localRecording ?? false;
 
-    if (participant?.localRecording === newValue) {
+    if (currentValue === newValue) {
         return;
     }
 

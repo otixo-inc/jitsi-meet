@@ -1,7 +1,4 @@
-// @ts-ignore
 import { jitsiLocalStorage } from '@jitsi/js-utils/jitsi-local-storage';
-// eslint-disable-next-line lines-around-comment
-// @ts-ignore
 import { safeJsonParse } from '@jitsi/js-utils/json';
 import React, { useCallback, useEffect, useState } from 'react';
 import { WithTranslation } from 'react-i18next';
@@ -14,7 +11,14 @@ import Icon from '../../base/icons/components/Icon';
 import { IconCloseLarge } from '../../base/icons/svg';
 import Tooltip from '../../base/tooltip/components/Tooltip';
 import Spinner from '../../base/ui/components/web/Spinner';
-import { BACKGROUNDS_LIMIT, IMAGES, type Image, VIRTUAL_BACKGROUND_TYPE } from '../constants';
+import { showWarningNotification } from '../../notifications/actions';
+import { NOTIFICATION_TIMEOUT_TYPE } from '../../notifications/constants';
+import {
+    BACKGROUNDS_LIMIT,
+    IMAGES,
+    type Image,
+    VIRTUAL_BACKGROUND_TYPE
+} from '../constants';
 import { toDataURL } from '../functions';
 import logger from '../logger';
 import { IVirtualBackground } from '../reducer';
@@ -107,7 +111,7 @@ const useStyles = makeStyles()(theme => {
             justifyContent: 'center',
             textAlign: 'center',
             ...theme.typography.labelBold,
-            color: theme.palette.text01,
+            color: theme.palette.virtualBackgroundText,
             objectFit: 'cover',
 
             [[ '&:hover', '&:focus' ] as any]: {
@@ -129,7 +133,7 @@ const useStyles = makeStyles()(theme => {
         },
 
         noneThumbnail: {
-            backgroundColor: theme.palette.ui04
+            backgroundColor: theme.palette.virtualBackgroundBorder
         },
 
         slightBlur: {
@@ -156,7 +160,7 @@ const useStyles = makeStyles()(theme => {
             position: 'absolute',
             top: '3px',
             right: '3px',
-            background: theme.palette.ui03,
+            background: theme.palette.virtualBackgroundBorder,
             borderRadius: '3px',
             cursor: 'pointer',
             display: 'none',
@@ -169,7 +173,8 @@ const useStyles = makeStyles()(theme => {
             [[ '&:hover', '&:focus' ] as any]: {
                 display: 'block'
             }
-        }
+        },
+
     };
 });
 
@@ -184,6 +189,7 @@ function VirtualBackgrounds({
     onOptionsChange,
     options,
     selectedVideoInputId,
+    dispatch,
     t
 }: IProps) {
     const { classes, cx } = useStyles();
@@ -216,9 +222,13 @@ function VirtualBackgrounds({
             err && setStoredImages(storedImages.slice(1));
         }
         if (storedImages.length === BACKGROUNDS_LIMIT) {
+            dispatch(showWarningNotification({
+                descriptionKey: 'virtualBackground.oldestBackgroundRemoved',
+                titleKey: 'virtualBackground.backgroundLimitReached'
+            }, NOTIFICATION_TIMEOUT_TYPE.MEDIUM));
             setStoredImages(storedImages.slice(1));
         }
-    }, [ storedImages ]);
+    }, [ storedImages, dispatch ]);
 
     const enableBlur = useCallback(async () => {
         onOptionsChange({
@@ -491,12 +501,13 @@ function VirtualBackgrounds({
  * @returns {{Props}}
  */
 function _mapStateToProps(state: IReduxState) {
+    const config = state['features/base/config'];
     const dynamicBrandingImages = state['features/dynamic-branding'].virtualBackgrounds;
     const hasBrandingImages = Boolean(dynamicBrandingImages.length);
 
     return {
         _images: (hasBrandingImages && dynamicBrandingImages) || IMAGES,
-        _showUploadButton: !state['features/base/config'].disableAddingBackgroundImages
+        _showUploadButton: !config.virtualBackground?.disableAddingImages
     };
 }
 

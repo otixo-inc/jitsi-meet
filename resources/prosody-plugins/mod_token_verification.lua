@@ -1,3 +1,10 @@
+-- Enforces JWT token room-claim verification at MUC join/create time. Loaded
+-- on the MUC component. For each join or room-create, calls
+-- token_util:verify_room() to check that the token's room claim matches the
+-- target room JID. Admins and domains listed in token_verification_allowlist
+-- are exempt. Anonymous users (no token) are allowed through. When
+-- token_verification_require_token_for_moderation is set, also blocks room
+-- config IQs (e.g. granting moderator status) from unauthenticated users.
 -- Token authentication
 -- Copyright (C) 2021-present 8x8, Inc.
 
@@ -74,17 +81,7 @@ local function verify_user(session, stanza)
         or allowlist:contains(user_bare_jid)
 
         -- allow main participants in visitor mode
-        or session.type == 's2sin'
-
-        -- Let Jigasi or transcriber pass throw
-        or util.is_sip_jigasi(stanza)
-        or util.is_transcriber_jigasi(stanza)
-
-        -- is jibri
-        or util.is_jibri(user_jid)
-
-        -- Let Sip Jibri pass through
-        or util.is_sip_jibri_join(stanza) then
+        or session.type == 's2sin' then
         if DEBUG then module:log("debug", "Token not required from user in allow list: %s", user_jid); end
         return true;
     end

@@ -588,7 +588,7 @@ function _registerForNativeEvents(store: IStore) {
         }
 
         if (transcription) {
-            store.dispatch(setRequestingSubtitles(true, false, null));
+            store.dispatch(setRequestingSubtitles(true, false, null, true));
         }
     });
 
@@ -603,7 +603,7 @@ function _registerForNativeEvents(store: IStore) {
         }
 
         if (transcription) {
-            store.dispatch(setRequestingSubtitles(false, false, null));
+            store.dispatch(setRequestingSubtitles(false, false, null, true));
         }
 
         if (![ JitsiRecordingConstants.mode.FILE, JitsiRecordingConstants.mode.STREAM ].includes(mode)) {
@@ -614,13 +614,7 @@ function _registerForNativeEvents(store: IStore) {
 
         const activeSession = getActiveSession(state, mode);
 
-        if (!activeSession?.id) {
-            logger.error('No recording or streaming session found');
-
-            return;
-        }
-
-        conference.stopRecording(activeSession.id);
+        conference.stopRecording(activeSession?.id);
     });
 
     eventEmitter.addListener(ExternalAPI.OVERWRITE_CONFIG, ({ config }: any) => {
