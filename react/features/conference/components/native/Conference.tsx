@@ -3,6 +3,7 @@ import React, { useCallback } from 'react';
 import {
     BackHandler,
     NativeModules,
+    StatusBar,
     View,
     ViewStyle
 } from 'react-native';
@@ -32,7 +33,6 @@ import { isFilmstripVisible } from '../../../filmstrip/functions.native';
 import CalleeInfoContainer from '../../../invite/components/callee-info/CalleeInfoContainer';
 import LargeVideo from '../../../large-video/components/LargeVideo.native';
 import { getIsLobbyVisible } from '../../../lobby/functions';
-import { navigate } from '../../../mobile/navigation/components/conference/ConferenceNavigationContainerRef';
 import { screen } from '../../../mobile/navigation/routes';
 import { isPipEnabled, setPictureInPictureEnabled } from '../../../mobile/picture-in-picture/functions';
 import Captions from '../../../subtitles/components/native/Captions';
@@ -227,19 +227,20 @@ class Conference extends AbstractConference<IProps, State> {
         const {
             _audioOnlyEnabled,
             _showLobby,
-            _startCarMode
+            _startCarMode,
+            navigation
         } = this.props;
 
         if (!prevProps._showLobby && _showLobby) {
-            navigate(screen.lobby.root);
+            navigation.navigate(screen.lobby.root);
         }
 
         if (prevProps._showLobby && !_showLobby) {
             if (_audioOnlyEnabled && _startCarMode) {
-                return;
+                navigation.navigate(screen.conference.carmode);
+            } else {
+                navigation.navigate(screen.conference.main);
             }
-
-            navigate(screen.conference.main);
         }
     }
 
@@ -266,8 +267,11 @@ class Conference extends AbstractConference<IProps, State> {
      */
     override render() {
         const {
+            _aspectRatio,
             _brandingStyles,
         } = this.props;
+
+        const isLandscape = _aspectRatio === ASPECT_RATIO_WIDE;
 
         return (
             <Container
@@ -275,6 +279,9 @@ class Conference extends AbstractConference<IProps, State> {
                     styles.conference,
                     _brandingStyles
                 ] }>
+                <StatusBar
+                    animated = { true }
+                    hidden = { isLandscape } />
                 <BrandingImageBackground />
                 { this._renderContent() }
             </Container>

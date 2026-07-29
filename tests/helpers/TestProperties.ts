@@ -8,6 +8,8 @@ export type ITestProperties = {
     description?: string;
     /** The test requires the webhook proxy to be available. */
     requireWebhookProxy: boolean;
+    /** Whether the test should be retried. */
+    retry: boolean;
     /** The test requires jaas, it should be skipped when the jaas configuration is not enabled. */
     useJaas: boolean;
     /** The test uses the webhook proxy if available. */
@@ -18,6 +20,7 @@ export type ITestProperties = {
 const defaultProperties: ITestProperties = {
     useWebhookProxy: false,
     requireWebhookProxy: false,
+    retry: false,
     useJaas: false,
     usesBrowsers: [ 'p1' ]
 };
@@ -67,9 +70,16 @@ export function loadTestFiles(files: string[]): void {
 
     testGlobals.forEach(fn => {
         originalTestFunctions[fn] = (global as any)[fn];
-        (global as any)[fn] = () => {
+        const stub: any = () => {
             // do nothing
         };
+
+        // Tolerate any expect.extend({...}) calls a spec or helper might do at module load.
+        if (fn === 'expect') {
+            stub.extend = () => { /* no-op */ };
+        }
+
+        (global as any)[fn] = stub;
     });
 
     try {

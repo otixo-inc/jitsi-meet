@@ -42,7 +42,7 @@ const useStyles = makeStyles()(theme => {
             flexDirection: 'column',
             minWidth: '211px',
             maxWidth: '100%',
-            borderRight: `1px solid ${theme.palette.ui03}`,
+            borderRight: `1px solid ${theme.palette.dialogBorder}`,
 
             [`@media (max-width: ${MOBILE_BREAKPOINT}px)`]: {
                 width: '100%',
@@ -70,7 +70,7 @@ const useStyles = makeStyles()(theme => {
 
         title: {
             ...theme.typography.heading5,
-            color: `${theme.palette.text01} !important`,
+            color: `${theme.palette.dialogText} !important`,
             margin: 0,
             padding: 0
         },
@@ -301,7 +301,7 @@ const DialogWithTabs = ({
         }
 
         return null;
-    }, [ selectedTabIndex, tabStates ]);
+    }, [ selectedTabIndex, tabStates, tabs ]);
 
     const closeIcon = useMemo(() => (
         <ClickableIcon
@@ -319,9 +319,11 @@ const DialogWithTabs = ({
             titleKey = { titleKey }>
             {(!isMobile || !selectedTab) && (
                 <div
+                    aria-label = { titleKey ? t(titleKey) : undefined }
                     aria-orientation = 'vertical'
                     className = { classes.sidebar }
-                    role = { isMobile ? undefined : 'tablist' }>
+                    role = { isMobile ? undefined : 'tablist' }
+                    tabIndex = { 0 }>
                     <div className = { classes.titleContainer }>
                         <h1
                             className = { classes.title }
@@ -383,8 +385,7 @@ const DialogWithTabs = ({
                             className = { cx(classes.content, tab.name !== selectedTab && 'hide') }
                             id = { `dialogtab-content-${tab.name}` }
                             key = { tab.name }
-                            role = { isMobile ? undefined : 'tabpanel' }
-                            tabIndex = { isMobile ? -1 : 0 }>
+                            role = { isMobile ? undefined : 'tabpanel' }>
                             { tab.name === selectedTab && selectedTabComponent }
                         </div>
                     ))}

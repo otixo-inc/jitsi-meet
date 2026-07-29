@@ -1,5 +1,24 @@
--- Module to be enabled under main muc component
--- Clean up the room in case it is empty and has only jibri and jigasi-transcriber left in the meeting
+-- Module to be enabled under the main MUC component.
+-- Destroys a conference room after a configurable timeout (default 20 s,
+-- overridable via services_empty_meeting_timeout) when the room is left
+-- occupied only by backend services — Jibri recorders or transcribers —
+-- with no regular participants remaining.
+--
+-- Identity is determined by JID prefix (util.lib.lua):
+--   is_jibri():       JID starts with 'recorder@recorder.', 'jibria@recorder.',
+--                     or 'jibrib@recorder.'
+--   is_transcriber(): JID starts with 'transcriber@recorder.',
+--                     'transcribera@recorder.', or 'transcriberb@recorder.'
+--   is_admin():       bare JID is in the Prosody admins list
+--
+-- Hook summary:
+--   muc-occupant-joined  (-100) — cancel the destroy timer when a regular user
+--                                  (not jibri, not transcriber) joins.
+--   muc-occupant-left    (-100) — start the destroy timer when the leaver is a
+--                                  regular user and only backend services remain;
+--                                  skip entirely if the leaver is admin, jibri,
+--                                  or transcriber, or if breakout_rooms_active.
+--   muc-room-destroyed   (1)    — cancel and clear the timer reference.
 
 local util = module:require 'util';
 local is_admin = util.is_admin;
@@ -40,13 +59,18 @@ module:hook('muc-occupant-left', function (event)
     end
 
     -- seems the room only has jibri and transcriber, add a timeout to destroy the room
+    if room.empty_destroy_timer then
+        room.empty_destroy_timer:stop();
+    end
     room.empty_destroy_timer = module:add_timer(EMPTY_TIMEOUT, function()
+        if room.destroying then return end
         room:destroy(nil, 'Empty room with recording and/or transcribing.');
 
         module:log('info',
-            'the conference terminated %s as being empty for %s seconds with recording/transcribing enabled',
-            room.jid, EMPTY_TIMEOUT);
+            'the conference terminated %s as being empty for %s seconds with recording/transcribing enabled. By %s',
+            room.jid, EMPTY_TIMEOUT, room.empty_destroy_timer);
     end)
+    module:log('info', 'Added room destroy timer %s for %s', room.empty_destroy_timer, room.jid);
 end, -100); -- the last thing to execute
 
 module:hook('muc-room-destroyed', function (event)
