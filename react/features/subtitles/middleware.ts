@@ -284,11 +284,19 @@ function _endpointMessageReceived(store: IStore, next: Function, action: AnyActi
             return next(action);
         }
 
-        // If the user is not requesting transcriptions just bail.
-        // Regex to filter out all possible country codes after language code:
-        // this should catch all notations like 'en-GB' 'en_GB' and 'enGB'
-        // and be independent of the country code length
-        if (!language || (_getPrimaryLanguageCode(json.language) !== _getPrimaryLanguageCode(language))) {
+        // Only display transcription results when the local user is showing subtitles and either
+        // wants the source language (no translation language selected) or the transcription's
+        // language matches the selected one. We rely on the redux _language (which is cleared when
+        // switching back to the original language) rather than the translation_language participant
+        // property, which is never cleared and can become stale.
+        // The primary language code comparison catches all country-code notations like 'en-GB',
+        // 'en_GB' and 'enGB' independent of the country code length.
+        const { _language, _requestingSubtitles } = state['features/subtitles'];
+        const selectedLanguage = _language?.replace('translation-languages:', '');
+
+        if (!_requestingSubtitles
+                || (selectedLanguage
+                    && _getPrimaryLanguageCode(json.language) !== _getPrimaryLanguageCode(selectedLanguage))) {
             return next(action);
         }
 
@@ -436,7 +444,7 @@ function _requestingSubtitlesChange(
             language.replace('translation-languages:', ''));
     }
 
-    if (!enabled && (backendRecordingOn || forceBackendRecordingOn)
+    if (!enabled && !skipMetadataUpdate && (backendRecordingOn || forceBackendRecordingOn)
         && conference?.getMetadataHandler()?.getMetadata()[RECORDING_METADATA_ID]?.isTranscribingEnabled) {
         conference?.getMetadataHandler()?.setMetadata(RECORDING_METADATA_ID, {
             isRecordingRequested: false,

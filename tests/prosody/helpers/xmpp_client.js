@@ -315,16 +315,20 @@ export async function createXmppClient({ host = 'localhost', domain, params, use
          * mod_filter_iq_rayo may block it, and the test asserts via the
          * /dial-iqs HTTP endpoint instead.
          *
-         * @param {string} roomJid          e.g. 'room@conference.localhost'
-         * @param {string} [dialTo='sip:test@example.com']  value for dial's `to` attribute.
-         *                                  Pass 'jitsi_meet_transcribe' to trigger
-         *                                  the transcription feature gate.
-         * @param {string|null} [roomNameHeader]  value for the JvbRoomName header.
-         *                                  Defaults to `roomJid` (correct value).
-         *                                  Pass null to omit the header entirely.
-         *                                  Pass any other string for a mismatch test.
+         * @param {string} roomJid   e.g. 'room@conference.localhost'
+         * @param {object} [opts]
+         * @param {string} [opts.dialTo='sip:test@example.com']  dial `to` attribute.
+         * @param {string|null} [opts.roomNameHeader]  JvbRoomName value; defaults to roomJid.
+         *   Pass null to omit, any other string for a mismatch test.
+         * @param {string|null} [opts.roomPassHeader]  JvbRoomPassword value; omitted by default.
+         * @param {object} [opts.extraHeaders]  extra name→value header pairs (spoof/strip tests).
          */
-        sendRayoIq(roomJid, dialTo = 'sip:test@example.com', roomNameHeader = roomJid) {
+        sendRayoIq(roomJid, {
+            dialTo = 'sip:test@example.com',
+            roomNameHeader = roomJid,
+            roomPassHeader = null,
+            extraHeaders = {}
+        } = {}) {
             const headers = [];
 
             if (roomNameHeader !== null) {
@@ -332,6 +336,22 @@ export async function createXmppClient({ host = 'localhost', domain, params, use
                     xmlns: 'urn:xmpp:rayo:1',
                     name: 'JvbRoomName',
                     value: roomNameHeader
+                }));
+            }
+
+            if (roomPassHeader !== null) {
+                headers.push(xml('header', {
+                    xmlns: 'urn:xmpp:rayo:1',
+                    name: 'JvbRoomPassword',
+                    value: roomPassHeader
+                }));
+            }
+
+            for (const [ name, value ] of Object.entries(extraHeaders)) {
+                headers.push(xml('header', {
+                    xmlns: 'urn:xmpp:rayo:1',
+                    name,
+                    value
                 }));
             }
 
@@ -507,6 +527,33 @@ export async function createXmppClient({ host = 'localhost', domain, params, use
                     xml('query', { xmlns: 'http://jabber.org/protocol/muc#admin' },
                         xml('item', { nick,
                             role: 'moderator' })
+                    )
+                )
+            );
+        },
+
+        /**
+         * Sends a muc#admin set IQ carrying a single <item> with the given
+         * attributes and resolves with the server's IQ response. Use to attempt
+         * a kick (role='none'), ban (affiliation='outcast'), or any other
+         * role/affiliation change on an occupant.
+         *
+         * Normally the caller must be a room moderator/owner, but hooks that run
+         * before Prosody's permission check (e.g. the set admin filtering in
+         * mod_muc_meeting_id) may reject the request regardless of privilege.
+         *
+         * @param {string} roomJid    e.g. 'room@conference.localhost'
+         * @param {object} itemAttrs  attributes for the <item>, e.g.
+         *                            { nick: 'focus', role: 'none' } or
+         *                            { jid: 'focus@auth.localhost', affiliation: 'outcast' }
+         */
+        sendMucAdmin(roomJid, itemAttrs) {
+            return sendIq(xmpp, pendingIqs,
+                xml('iq', { type: 'set',
+                    to: roomJid,
+                    id: `admin-${++_counter}` },
+                    xml('query', { xmlns: 'http://jabber.org/protocol/muc#admin' },
+                        xml('item', itemAttrs)
                     )
                 )
             );
