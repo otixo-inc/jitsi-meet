@@ -20,7 +20,7 @@ const IconButton: React.FC<IIconButtonProps> = ({
     tapColor,
     type
 }: IIconButtonProps) => {
-    const { PRIMARY, SECONDARY, TERTIARY } = BUTTON_TYPES;
+    const { PRIMARY, SECONDARY, TERTIARY, DESTRUCTIVE } = BUTTON_TYPES;
 
     let color;
     let underlayColor;
@@ -38,6 +38,10 @@ const IconButton: React.FC<IIconButtonProps> = ({
         color = iconColor;
         iconButtonContainerStyles = styles.iconButtonContainer;
         underlayColor = BaseTheme.palette.action03;
+    } else if (type === DESTRUCTIVE) {
+        color = iconColor;
+        iconButtonContainerStyles = styles.iconButtonContainerDanger;
+        underlayColor = BaseTheme.palette.actionDanger;
     } else {
         color = iconColor;
         underlayColor = tapColor;
