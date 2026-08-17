@@ -151,6 +151,11 @@ export default {
         backgroundColor: BaseTheme.palette.action02
     },
 
+    iconButtonContainerDanger: {
+        ...iconButtonContainer,
+        backgroundColor: BaseTheme.palette.actionDanger
+    },
+
     iconButtonContainerDisabled: {
         ...iconButtonContainer,
         backgroundColor: BaseTheme.palette.disabled01
